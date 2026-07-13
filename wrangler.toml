@@ -1,0 +1,9 @@
+name = "family-vacation-2026"
+compatibility_date = "2026-07-01"
+pages_build_output_dir = "."
+
+[[d1_databases]]
+binding = "DB"
+database_name = "family-vacation-2026"
+database_id = "11d4a6cd-6967-4e75-b057-a21b6c301405"
+migrations_dir = "migrations"

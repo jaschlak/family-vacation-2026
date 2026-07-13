@@ -1,0 +1,16 @@
+{
+  "name": "family-vacation-2026",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node dev-server.mjs",
+    "dev:cloudflare": "wrangler pages dev . --d1 DB=family-vacation-2026 --persist-to .wrangler/state",
+    "deploy": "wrangler pages deploy . --project-name family-vacation-2026",
+    "db:local": "wrangler d1 migrations apply family-vacation-2026 --local",
+    "db:remote": "wrangler d1 migrations apply family-vacation-2026 --remote"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}
