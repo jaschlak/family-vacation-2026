@@ -9,6 +9,7 @@ const boardView = document.querySelector("#board-view");
 const timelineView = document.querySelector("#timeline-view");
 const timelineDays = document.querySelector("#timeline-days");
 const timeline = document.querySelector("#timeline");
+const timelineChoices = document.querySelector("#timeline-choices");
 const claimDialog = document.querySelector("#claim-dialog");
 const claimForm = document.querySelector("#claim-form");
 const ideaForm = document.querySelector("#idea-form");
@@ -177,6 +178,24 @@ function renderTimeline() {
   const height = (endHour - startHour) * 60 * pixelsPerMinute;
   const laidOut = assignOverlapLanes(positioned);
   const hours = Array.from({ length: endHour - startHour + 1 }, (_, index) => startHour + index);
+
+  const overlapping = laidOut.filter((idea) => idea.lanes > 1);
+  timelineChoices.hidden = overlapping.length < 2;
+  timelineChoices.innerHTML = overlapping.length < 2 ? "" : `
+    <div class="timeline-choices-heading">
+      <strong>${overlapping.length} overlapping choices</strong>
+      <span>These options share part or all of the same time range.</span>
+    </div>
+    <div class="timeline-choice-grid">
+      ${overlapping.map((idea) => {
+        const safeUrl = idea.infoUrl && /^https?:\/\//i.test(idea.infoUrl) ? escapeHtml(idea.infoUrl) : "";
+        return `<article class="timeline-choice">
+          <h4>${escapeHtml(idea.title)}</h4>
+          <p>${rangeLabel(idea.startsAt, idea.endsAt)}</p>
+          ${safeUrl ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">More info ↗</a>` : ""}
+        </article>`;
+      }).join("")}
+    </div>`;
 
   timeline.style.height = `${height}px`;
   timeline.innerHTML = `
