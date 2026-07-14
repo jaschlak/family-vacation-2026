@@ -207,7 +207,8 @@ function renderTimeline() {
         const top = (idea.startMinute - startHour * 60) * pixelsPerMinute + 3;
         const heightPx = Math.max(42, (idea.endMinute - idea.startMinute) * pixelsPerMinute - 6);
         const safeUrl = idea.infoUrl && /^https?:\/\//i.test(idea.infoUrl) ? escapeHtml(idea.infoUrl) : "";
-        return `<div class="timeline-event-position" style="top:${top}px;height:${heightPx}px;--lanes:${idea.lanes}">
+        const laneCount = Math.min(8, Math.max(1, idea.lanes));
+        return `<div class="timeline-event-position lanes-${laneCount}" style="top:${top}px;height:${heightPx}px">
           <article class="timeline-event tone-${index % 3 + 1}" style="grid-column:${idea.lane + 1}">
             <h4>${escapeHtml(idea.title)}</h4>
             <p class="timeline-event-time">${rangeLabel(idea.startsAt, idea.endsAt)}</p>
