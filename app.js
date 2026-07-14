@@ -20,9 +20,8 @@ try {
   votedActivities = new Set();
 }
 
-const state = { days: [], activities: [], weather: [], audienceFilter: "all", availabilityFilter: "all", view: "board", timelineDate: "2026-07-22" };
+const state = { days: [], activities: [], audienceFilter: "all", availabilityFilter: "all", view: "board", timelineDate: "2026-07-22" };
 const dayGrid = document.querySelector("#day-grid");
-const weatherGrid = document.querySelector("#weather-grid");
 const ideaList = document.querySelector("#idea-list");
 const emptyState = document.querySelector("#empty-state");
 const boardView = document.querySelector("#board-view");
@@ -101,33 +100,8 @@ function renderDays() {
         ` : `
           <button class="claim-button" type="button" data-claim-date="${day.date}">Claim this day →</button>
         `}
-        <a class="weather-link" href="#weather-${day.date}"
-          aria-label="Weather forecast for ${date.weekday}, July ${date.day} in Hoosick Falls">Weather for ${date.shortWeekday} ↓</a>
-      </article>`;
-  }).join("");
-}
-
-function renderWeather() {
-  const forecasts = new Map(state.weather.map((day) => [day.date, day]));
-  weatherGrid.innerHTML = state.days.map((tripDay) => {
-    const date = dateParts(tripDay.date);
-    const forecast = forecasts.get(tripDay.date);
-    const hasForecast = Boolean(forecast?.available && (forecast.summary || forecast.nightSummary));
-    const temperatures = [
-      Number.isFinite(forecast?.high) ? `<span>High <strong>${forecast.high}°</strong></span>` : "",
-      Number.isFinite(forecast?.low) ? `<span>Low <strong>${forecast.low}°</strong></span>` : ""
-    ].filter(Boolean).join("");
-    return `
-      <article class="weather-card ${hasForecast ? "available" : "pending"}" id="weather-${tripDay.date}">
-        <div class="weather-date"><span>${date.shortWeekday}</span><strong>${date.day}</strong></div>
-        ${hasForecast ? `
-          <div class="weather-temperatures">${temperatures}</div>
-          <h3>${escapeHtml(forecast.summary || forecast.nightSummary)}</h3>
-          ${forecast.summary && forecast.nightSummary ? `<p>Night: ${escapeHtml(forecast.nightSummary)}</p>` : ""}
-        ` : `
-          <h3>Not available yet</h3>
-          <p>Check again as this date gets closer.</p>
-        `}
+        <a class="weather-link" href="/weather.html#weather-${day.date}"
+          aria-label="Weather forecast for ${date.weekday}, July ${date.day} in Hoosick Falls">Weather for ${date.shortWeekday} ↗</a>
       </article>`;
   }).join("");
 }
@@ -143,6 +117,14 @@ function renderIdeas() {
   ideaList.innerHTML = visible.map((idea) => {
     const date = idea.isEveryday ? null : dateParts(idea.startsAt);
     const safeUrl = idea.infoUrl && /^https?:\/\//i.test(idea.infoUrl) ? escapeHtml(idea.infoUrl) : "";
+    const details = idea.notes || safeUrl ? `
+      <details class="idea-details">
+        <summary>Event details</summary>
+        <div class="idea-details-content">
+          ${idea.notes ? `<p>${escapeHtml(idea.notes)}</p>` : ""}
+          ${safeUrl ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">More information ↗</a>` : ""}
+        </div>
+      </details>` : "";
     const availability = idea.isEveryday ? `
       <span>Available</span>
       <strong class="everyday-mark">Every day</strong>
@@ -159,14 +141,13 @@ function renderIdeas() {
         </div>
         <div class="idea-main">
           <h3>${escapeHtml(idea.title)}</h3>
-          ${idea.notes ? `<p>${escapeHtml(idea.notes)}</p>` : ""}
           <div class="idea-meta">
             ${idea.audience.map((group) => `<span class="tag">${escapeHtml(group)}</span>`).join("")}
             <span class="tag submitted">Added by ${escapeHtml(idea.submittedBy)}</span>
             ${voteButton(idea)}
           </div>
+          ${details}
         </div>
-        ${safeUrl ? `<a class="idea-link" href="${safeUrl}" target="_blank" rel="noopener noreferrer">More info ↗</a>` : ""}
       </article>`;
   }).join("");
   emptyState.hidden = visible.length > 0;
@@ -244,7 +225,7 @@ function renderTimeline() {
   const dayIdeas = ideasForDay(state.timelineDate);
   const everydayIdeas = state.activities.filter((idea) => idea.isEveryday);
   document.querySelector("#timeline-title").textContent = `${selectedDate.weekday}, July ${selectedDate.day}`;
-  document.querySelector("#timeline-weather-link").href = `#weather-${state.timelineDate}`;
+  document.querySelector("#timeline-weather-link").href = `/weather.html#weather-${state.timelineDate}`;
   const scheduledLabel = `${dayIdeas.length} scheduled`;
   const everydayLabel = `${everydayIdeas.length} everyday`;
   document.querySelector("#timeline-count").textContent = everydayIdeas.length ? `${scheduledLabel} · ${everydayLabel}` : scheduledLabel;
@@ -288,8 +269,8 @@ function renderTimeline() {
         return `<article class="timeline-choice">
           <h4>${escapeHtml(idea.title)}</h4>
           <p>${rangeLabel(idea.startsAt, idea.endsAt)}</p>
-          ${safeUrl ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">More info ↗</a>` : ""}
           ${voteButton(idea, true)}
+          ${idea.notes || safeUrl ? `<details class="timeline-choice-details"><summary>Event details</summary><div>${idea.notes ? `<p>${escapeHtml(idea.notes)}</p>` : ""}${safeUrl ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">More information ↗</a>` : ""}</div></details>` : ""}
         </article>`;
       }).join("")}
     </div>`;
@@ -309,9 +290,8 @@ function renderTimeline() {
           <article class="timeline-event tone-${index % 3 + 1}" style="grid-column:${idea.lane + 1}">
             <h4>${escapeHtml(idea.title)}</h4>
             <p class="timeline-event-time">${rangeLabel(idea.startsAt, idea.endsAt)}</p>
-            ${idea.notes ? `<p class="timeline-event-notes">${escapeHtml(idea.notes)}</p>` : ""}
-            ${safeUrl ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">More info ↗</a>` : ""}
             ${voteButton(idea, true)}
+            ${idea.notes || safeUrl ? `<details class="timeline-event-details"><summary>Details</summary><div>${idea.notes ? `<p class="timeline-event-notes">${escapeHtml(idea.notes)}</p>` : ""}${safeUrl ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">More information ↗</a>` : ""}</div></details>` : ""}
           </article>
         </div>`;
       }).join("")}
@@ -341,20 +321,14 @@ async function request(path, options = {}) {
 
 async function loadTrip() {
   try {
-    const [data, weather] = await Promise.all([
-      request("/api/trip"),
-      request("/api/weather").catch(() => ({ days: [] }))
-    ]);
+    const data = await request("/api/trip");
     state.days = data.days;
     state.activities = data.activities;
-    state.weather = weather.days || [];
     renderDays();
-    renderWeather();
     renderIdeas();
     renderTimeline();
   } catch (error) {
     dayGrid.innerHTML = `<div class="loading-card">We couldn’t load the calendar. Please refresh in a moment.</div>`;
-    weatherGrid.innerHTML = `<div class="loading-card">The daily forecast will be available after the calendar loads.</div>`;
     ideaList.innerHTML = "";
     emptyState.hidden = false;
     toast(error.message, true);
