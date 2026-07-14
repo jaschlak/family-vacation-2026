@@ -1,9 +1,28 @@
 const TRIP_START = "2026-07-18";
 const TRIP_END = "2026-07-25";
-const WEATHER_URL = "https://forecast.weather.gov/MapClick.php?lat=42.9009&lon=-73.35";
+const VOTER_KEY = "family-vacation-voter-id";
+const VOTED_KEY = "family-vacation-voted-activities";
 
-const state = { days: [], activities: [], audienceFilter: "all", availabilityFilter: "all", view: "board", timelineDate: "2026-07-22" };
+function storedValue(key) {
+  try { return localStorage.getItem(key); } catch { return null; }
+}
+
+function saveValue(key, value) {
+  try { localStorage.setItem(key, value); } catch { /* Voting still works for this page load. */ }
+}
+
+const voterId = storedValue(VOTER_KEY) || crypto.randomUUID();
+saveValue(VOTER_KEY, voterId);
+let votedActivities;
+try {
+  votedActivities = new Set(JSON.parse(storedValue(VOTED_KEY) || "[]").map(Number));
+} catch {
+  votedActivities = new Set();
+}
+
+const state = { days: [], activities: [], weather: [], audienceFilter: "all", availabilityFilter: "all", view: "board", timelineDate: "2026-07-22" };
 const dayGrid = document.querySelector("#day-grid");
+const weatherGrid = document.querySelector("#weather-grid");
 const ideaList = document.querySelector("#idea-list");
 const emptyState = document.querySelector("#empty-state");
 const boardView = document.querySelector("#board-view");
@@ -27,6 +46,15 @@ function syncEverydayFields(everyday) {
 const escapeHtml = (value = "") => String(value).replace(/[&<>'"]/g, (char) => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;"
 })[char]);
+
+function voteButton(idea, compact = false) {
+  const voted = votedActivities.has(Number(idea.id));
+  const count = Number(idea.voteCount || 0);
+  return `<button class="vote-button ${compact ? "compact" : ""} ${voted ? "voted" : ""}" type="button"
+    data-vote-id="${idea.id}" aria-pressed="${voted}" aria-label="${voted ? "Remove your vote from" : "Vote for"} ${escapeHtml(idea.title)}">
+    <span aria-hidden="true">♥</span> ${voted ? "Voted" : "Vote"} <strong>${count}</strong>
+  </button>`;
+}
 
 function tripDate(value) {
   const [year, month, day] = value.slice(0, 10).split("-").map(Number);
@@ -73,8 +101,33 @@ function renderDays() {
         ` : `
           <button class="claim-button" type="button" data-claim-date="${day.date}">Claim this day →</button>
         `}
-        <a class="weather-link" href="${WEATHER_URL}" target="_blank" rel="noopener noreferrer"
-          aria-label="Weather forecast for ${date.weekday}, July ${date.day} in Hoosick Falls">Weather forecast ↗</a>
+        <a class="weather-link" href="#weather-${day.date}"
+          aria-label="Weather forecast for ${date.weekday}, July ${date.day} in Hoosick Falls">Weather for ${date.shortWeekday} ↓</a>
+      </article>`;
+  }).join("");
+}
+
+function renderWeather() {
+  const forecasts = new Map(state.weather.map((day) => [day.date, day]));
+  weatherGrid.innerHTML = state.days.map((tripDay) => {
+    const date = dateParts(tripDay.date);
+    const forecast = forecasts.get(tripDay.date);
+    const hasForecast = Boolean(forecast?.available && (forecast.summary || forecast.nightSummary));
+    const temperatures = [
+      Number.isFinite(forecast?.high) ? `<span>High <strong>${forecast.high}°</strong></span>` : "",
+      Number.isFinite(forecast?.low) ? `<span>Low <strong>${forecast.low}°</strong></span>` : ""
+    ].filter(Boolean).join("");
+    return `
+      <article class="weather-card ${hasForecast ? "available" : "pending"}" id="weather-${tripDay.date}">
+        <div class="weather-date"><span>${date.shortWeekday}</span><strong>${date.day}</strong></div>
+        ${hasForecast ? `
+          <div class="weather-temperatures">${temperatures}</div>
+          <h3>${escapeHtml(forecast.summary || forecast.nightSummary)}</h3>
+          ${forecast.summary && forecast.nightSummary ? `<p>Night: ${escapeHtml(forecast.nightSummary)}</p>` : ""}
+        ` : `
+          <h3>Not available yet</h3>
+          <p>Check again as this date gets closer.</p>
+        `}
       </article>`;
   }).join("");
 }
@@ -110,6 +163,7 @@ function renderIdeas() {
           <div class="idea-meta">
             ${idea.audience.map((group) => `<span class="tag">${escapeHtml(group)}</span>`).join("")}
             <span class="tag submitted">Added by ${escapeHtml(idea.submittedBy)}</span>
+            ${voteButton(idea)}
           </div>
         </div>
         ${safeUrl ? `<a class="idea-link" href="${safeUrl}" target="_blank" rel="noopener noreferrer">More info ↗</a>` : ""}
@@ -190,6 +244,7 @@ function renderTimeline() {
   const dayIdeas = ideasForDay(state.timelineDate);
   const everydayIdeas = state.activities.filter((idea) => idea.isEveryday);
   document.querySelector("#timeline-title").textContent = `${selectedDate.weekday}, July ${selectedDate.day}`;
+  document.querySelector("#timeline-weather-link").href = `#weather-${state.timelineDate}`;
   const scheduledLabel = `${dayIdeas.length} scheduled`;
   const everydayLabel = `${everydayIdeas.length} everyday`;
   document.querySelector("#timeline-count").textContent = everydayIdeas.length ? `${scheduledLabel} · ${everydayLabel}` : scheduledLabel;
@@ -203,7 +258,7 @@ function renderTimeline() {
     <div class="timeline-everyday-list">
       ${everydayIdeas.map((idea) => {
         const safeUrl = idea.infoUrl && /^https?:\/\//i.test(idea.infoUrl) ? escapeHtml(idea.infoUrl) : "";
-        return `<span class="timeline-everyday-item">${escapeHtml(idea.title)}${safeUrl ? ` · <a href="${safeUrl}" target="_blank" rel="noopener noreferrer">info</a>` : ""}</span>`;
+        return `<span class="timeline-everyday-item">${escapeHtml(idea.title)}${safeUrl ? ` · <a href="${safeUrl}" target="_blank" rel="noopener noreferrer">info</a>` : ""} ${voteButton(idea, true)}</span>`;
       }).join("")}
     </div>`;
 
@@ -234,6 +289,7 @@ function renderTimeline() {
           <h4>${escapeHtml(idea.title)}</h4>
           <p>${rangeLabel(idea.startsAt, idea.endsAt)}</p>
           ${safeUrl ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">More info ↗</a>` : ""}
+          ${voteButton(idea, true)}
         </article>`;
       }).join("")}
     </div>`;
@@ -255,6 +311,7 @@ function renderTimeline() {
             <p class="timeline-event-time">${rangeLabel(idea.startsAt, idea.endsAt)}</p>
             ${idea.notes ? `<p class="timeline-event-notes">${escapeHtml(idea.notes)}</p>` : ""}
             ${safeUrl ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">More info ↗</a>` : ""}
+            ${voteButton(idea, true)}
           </article>
         </div>`;
       }).join("")}
@@ -284,14 +341,20 @@ async function request(path, options = {}) {
 
 async function loadTrip() {
   try {
-    const data = await request("/api/trip");
+    const [data, weather] = await Promise.all([
+      request("/api/trip"),
+      request("/api/weather").catch(() => ({ days: [] }))
+    ]);
     state.days = data.days;
     state.activities = data.activities;
+    state.weather = weather.days || [];
     renderDays();
+    renderWeather();
     renderIdeas();
     renderTimeline();
   } catch (error) {
     dayGrid.innerHTML = `<div class="loading-card">We couldn’t load the calendar. Please refresh in a moment.</div>`;
+    weatherGrid.innerHTML = `<div class="loading-card">The daily forecast will be available after the calendar loads.</div>`;
     ideaList.innerHTML = "";
     emptyState.hidden = false;
     toast(error.message, true);
@@ -394,6 +457,32 @@ document.querySelector(".availability-filters").addEventListener("click", (event
 
 document.querySelector("#is-everyday").addEventListener("change", (event) => {
   syncEverydayFields(event.currentTarget.checked);
+});
+
+document.querySelector(".ideas-section").addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-vote-id]");
+  if (!button) return;
+  const id = Number(button.dataset.voteId);
+  const activity = state.activities.find((idea) => idea.id === id);
+  if (!activity) return;
+
+  const removing = votedActivities.has(id);
+  document.querySelectorAll(`[data-vote-id="${id}"]`).forEach((item) => { item.disabled = true; });
+  try {
+    const result = await request(`/api/activities/${id}/vote`, {
+      method: removing ? "DELETE" : "PUT",
+      body: JSON.stringify({ voterId })
+    });
+    activity.voteCount = result.voteCount;
+    if (result.voted) votedActivities.add(id);
+    else votedActivities.delete(id);
+    saveValue(VOTED_KEY, JSON.stringify([...votedActivities]));
+    renderIdeas();
+    renderTimeline();
+  } catch (error) {
+    toast(error.message, true);
+    document.querySelectorAll(`[data-vote-id="${id}"]`).forEach((item) => { item.disabled = false; });
+  }
 });
 
 document.querySelector(".view-switch").addEventListener("click", (event) => {

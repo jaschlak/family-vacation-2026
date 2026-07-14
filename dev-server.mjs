@@ -9,6 +9,7 @@ const dataDir = join(root, ".data");
 const dataFile = join(dataDir, "local.json");
 const port = Number(process.env.PORT || 8788);
 const dates = Array.from({ length: 8 }, (_, index) => `2026-07-${String(18 + index).padStart(2, "0")}`);
+const nwsForecastUrl = "https://api.weather.gov/gridpoints/ALY/84,77/forecast";
 const initialData = {
   days: dates.map((date) => ({ date, familyName: null, claimedBy: null, claimedAt: null })),
   activities: [
@@ -63,6 +64,17 @@ async function saveData(data) {
   await writeFile(dataFile, JSON.stringify(data, null, 2));
 }
 
+function tripPayload(data) {
+  const votes = Array.isArray(data.votes) ? data.votes : [];
+  return {
+    days: data.days,
+    activities: data.activities.map((activity) => ({
+      ...activity,
+      voteCount: votes.filter((vote) => vote.activityId === activity.id).length
+    }))
+  };
+}
+
 function sendJson(response, body, status = 200) {
   response.writeHead(status, { "Content-Type": "application/json", "Cache-Control": "no-store" });
   response.end(JSON.stringify(body));
@@ -79,7 +91,29 @@ const types = { ".html": "text/html; charset=utf-8", ".css": "text/css; charset=
 createServer(async (request, response) => {
   const url = new URL(request.url, `http://${request.headers.host}`);
   try {
-    if (url.pathname === "/api/trip" && request.method === "GET") return sendJson(response, await loadData());
+    if (url.pathname === "/api/trip" && request.method === "GET") return sendJson(response, tripPayload(await loadData()));
+
+    if (url.pathname === "/api/weather" && request.method === "GET") {
+      const forecastResponse = await fetch(nwsForecastUrl, {
+        headers: { Accept: "application/geo+json", "User-Agent": "family-vacation-2026 local preview" }
+      });
+      if (!forecastResponse.ok) return sendJson(response, { error: "The Hoosick Falls forecast is temporarily unavailable." }, 502);
+      const forecast = await forecastResponse.json();
+      const byDate = Object.fromEntries(dates.map((date) => [date, { date, available: false }]));
+      for (const period of forecast?.properties?.periods || []) {
+        const date = period.startTime?.slice(0, 10);
+        if (!byDate[date]) continue;
+        byDate[date].available = true;
+        if (period.isDaytime) {
+          byDate[date].high = period.temperature;
+          byDate[date].summary = period.shortForecast;
+        } else {
+          byDate[date].low = period.temperature;
+          byDate[date].nightSummary = period.shortForecast;
+        }
+      }
+      return sendJson(response, { location: "Hoosick Falls, New York", days: dates.map((date) => byDate[date]) });
+    }
 
     if (url.pathname.startsWith("/api/days/") && request.method === "PUT") {
       const date = decodeURIComponent(url.pathname.split("/").pop());
@@ -95,6 +129,25 @@ createServer(async (request, response) => {
       return sendJson(response, { day });
     }
 
+    const voteRoute = url.pathname.match(/^\/api\/activities\/(\d+)\/vote$/);
+    if (voteRoute && ["PUT", "DELETE"].includes(request.method)) {
+      const input = await bodyJson(request);
+      const voterId = typeof input?.voterId === "string" ? input.voterId.trim() : "";
+      const voterPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+      if (!voterPattern.test(voterId)) return sendJson(response, { error: "Unable to record that vote." }, 400);
+
+      const data = await loadData();
+      const id = Number(voteRoute[1]);
+      if (!data.activities.some((activity) => activity.id === id)) return sendJson(response, { error: "That idea no longer exists." }, 404);
+      if (!Array.isArray(data.votes)) data.votes = [];
+      const existing = data.votes.findIndex((vote) => vote.activityId === id && vote.voterId === voterId);
+      if (request.method === "PUT" && existing === -1) data.votes.push({ activityId: id, voterId });
+      if (request.method === "DELETE" && existing !== -1) data.votes.splice(existing, 1);
+      await saveData(data);
+      const voteCount = data.votes.filter((vote) => vote.activityId === id).length;
+      return sendJson(response, { activityId: id, voteCount, voted: request.method === "PUT" });
+    }
+
     if (url.pathname === "/api/activities" && request.method === "POST") {
       const input = await bodyJson(request);
       const allowed = ["Everyone", "Adults", "Seniors", "Teens", "Kids", "Little kids"];
@@ -106,7 +159,7 @@ createServer(async (request, response) => {
       const data = await loadData();
       const activity = {
         id: Math.max(0, ...data.activities.map((item) => item.id)) + 1,
-        title: input.title.trim().slice(0, 100), audience, isEveryday,
+        title: input.title.trim().slice(0, 100), audience, isEveryday, voteCount: 0,
         startsAt: isEveryday ? "2026-07-18T00:00" : input.startsAt,
         endsAt: isEveryday ? "2026-07-25T23:59" : input.endsAt,
         infoUrl: input.infoUrl?.trim().slice(0, 500) || null,

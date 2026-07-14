@@ -54,6 +54,22 @@
         </div>
       </section>
 
+      <section class="weather-section" id="weather">
+        <div class="shell">
+          <div class="section-heading split-heading">
+            <div>
+              <p class="eyebrow dark">Hoosick Falls weather</p>
+              <h2>Forecast for our week</h2>
+            </div>
+            <p>Daily forecasts appear as each date enters the National Weather Service forecast window.</p>
+          </div>
+          <div class="weather-grid" id="weather-grid" aria-live="polite">
+            <div class="loading-card">Loading the daily forecast…</div>
+          </div>
+          <p class="weather-source">Forecast provided by the <a href="https://forecast.weather.gov/MapClick.php?lat=42.9009&amp;lon=-73.35" target="_blank" rel="noopener noreferrer">National Weather Service ↗</a></p>
+        </div>
+      </section>
+
       <section class="ideas-section" id="ideas">
         <div class="shell">
           <div class="section-heading split-heading">
@@ -105,7 +121,7 @@
               <div>
                 <p class="eyebrow coral">Day at a glance</p>
                 <h3 id="timeline-title">Wednesday, July 22</h3>
-                <a class="timeline-weather-link" href="https://forecast.weather.gov/MapClick.php?lat=42.9009&amp;lon=-73.35" target="_blank" rel="noopener noreferrer">Hoosick Falls weather forecast ↗</a>
+                <a class="timeline-weather-link" id="timeline-weather-link" href="#weather-2026-07-22">Weather for this day ↓</a>
               </div>
               <p id="timeline-count">3 ideas</p>
             </div>
