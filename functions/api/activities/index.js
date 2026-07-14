@@ -1,6 +1,6 @@
 import { clean, json, mapActivity, readJson } from "../../_lib/http.js";
 
-const AUDIENCES = new Set(["Everyone", "Adults", "Teens", "Kids", "Little kids"]);
+const AUDIENCES = new Set(["Everyone", "Adults", "Seniors", "Teens", "Kids", "Little kids"]);
 const DATE_TIME_PATTERN = /^2026-07-(1[89]|2[0-5])T([01]\d|2[0-3]):[0-5]\d$/;
 const TRIP_START = "2026-07-18T00:00";
 const TRIP_END = "2026-07-25T23:59";

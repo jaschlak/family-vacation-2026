@@ -97,7 +97,7 @@ createServer(async (request, response) => {
 
     if (url.pathname === "/api/activities" && request.method === "POST") {
       const input = await bodyJson(request);
-      const allowed = ["Everyone", "Adults", "Teens", "Kids", "Little kids"];
+      const allowed = ["Everyone", "Adults", "Seniors", "Teens", "Kids", "Little kids"];
       const audience = Array.isArray(input?.audience) ? [...new Set(input.audience.filter((item) => allowed.includes(item)))] : [];
       const isEveryday = input?.isEveryday === true;
       if (!input?.title?.trim() || !input?.submittedBy?.trim() || !audience.length || (!isEveryday && input.endsAt <= input.startsAt)) {
