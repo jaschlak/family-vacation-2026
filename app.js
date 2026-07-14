@@ -1,7 +1,8 @@
 const TRIP_START = "2026-07-18";
 const TRIP_END = "2026-07-25";
+const WEATHER_URL = "https://forecast.weather.gov/MapClick.php?lat=42.9009&lon=-73.35";
 
-const state = { days: [], activities: [], filter: "all", view: "board", timelineDate: "2026-07-22" };
+const state = { days: [], activities: [], audienceFilter: "all", availabilityFilter: "all", view: "board", timelineDate: "2026-07-22" };
 const dayGrid = document.querySelector("#day-grid");
 const ideaList = document.querySelector("#idea-list");
 const emptyState = document.querySelector("#empty-state");
@@ -10,9 +11,18 @@ const timelineView = document.querySelector("#timeline-view");
 const timelineDays = document.querySelector("#timeline-days");
 const timeline = document.querySelector("#timeline");
 const timelineChoices = document.querySelector("#timeline-choices");
+const timelineEveryday = document.querySelector("#timeline-everyday");
 const claimDialog = document.querySelector("#claim-dialog");
 const claimForm = document.querySelector("#claim-form");
 const ideaForm = document.querySelector("#idea-form");
+
+function syncEverydayFields(everyday) {
+  document.querySelectorAll(".time-field").forEach((field) => { field.hidden = everyday; });
+  [document.querySelector("#starts-at"), document.querySelector("#ends-at")].forEach((input) => {
+    input.disabled = everyday;
+    input.required = !everyday;
+  });
+}
 
 const escapeHtml = (value = "") => String(value).replace(/[&<>'"]/g, (char) => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;"
@@ -63,21 +73,36 @@ function renderDays() {
         ` : `
           <button class="claim-button" type="button" data-claim-date="${day.date}">Claim this day →</button>
         `}
+        <a class="weather-link" href="${WEATHER_URL}" target="_blank" rel="noopener noreferrer"
+          aria-label="Weather forecast for ${date.weekday}, July ${date.day} in Hoosick Falls">Weather forecast ↗</a>
       </article>`;
   }).join("");
 }
 
 function renderIdeas() {
-  const visible = state.activities.filter((idea) => state.filter === "all" || idea.audience.includes(state.filter));
+  const visible = state.activities.filter((idea) => {
+    const matchesAudience = state.audienceFilter === "all" || idea.audience.includes(state.audienceFilter);
+    const matchesAvailability = state.availabilityFilter === "all"
+      || (state.availabilityFilter === "everyday" && idea.isEveryday)
+      || (state.availabilityFilter === "scheduled" && !idea.isEveryday);
+    return matchesAudience && matchesAvailability;
+  });
   ideaList.innerHTML = visible.map((idea) => {
-    const date = dateParts(idea.startsAt);
+    const date = idea.isEveryday ? null : dateParts(idea.startsAt);
     const safeUrl = idea.infoUrl && /^https?:\/\//i.test(idea.infoUrl) ? escapeHtml(idea.infoUrl) : "";
+    const availability = idea.isEveryday ? `
+      <span>Available</span>
+      <strong class="everyday-mark">Every day</strong>
+      <small>Any time</small>
+    ` : `
+      <span>${date.month} · ${date.shortWeekday}</span>
+      <strong>${date.day}</strong>
+      <small>${rangeLabel(idea.startsAt, idea.endsAt)}</small>
+    `;
     return `
       <article class="idea-card">
         <div class="idea-date">
-          <span>${date.month} · ${date.shortWeekday}</span>
-          <strong>${date.day}</strong>
-          <small>${rangeLabel(idea.startsAt, idea.endsAt)}</small>
+          ${availability}
         </div>
         <div class="idea-main">
           <h3>${escapeHtml(idea.title)}</h3>
@@ -97,7 +122,7 @@ function ideasForDay(date) {
   const next = tripDate(date);
   next.setDate(next.getDate() + 1);
   const nextDate = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, "0")}-${String(next.getDate()).padStart(2, "0")}`;
-  return state.activities.filter((idea) => idea.startsAt < `${nextDate}T00:00` && idea.endsAt > `${date}T00:00`);
+  return state.activities.filter((idea) => !idea.isEveryday && idea.startsAt < `${nextDate}T00:00` && idea.endsAt > `${date}T00:00`);
 }
 
 function minutesOnDay(value, date, isEnd = false) {
@@ -163,8 +188,24 @@ function renderTimeline() {
   renderTimelineDays();
   const selectedDate = dateParts(state.timelineDate);
   const dayIdeas = ideasForDay(state.timelineDate);
+  const everydayIdeas = state.activities.filter((idea) => idea.isEveryday);
   document.querySelector("#timeline-title").textContent = `${selectedDate.weekday}, July ${selectedDate.day}`;
-  document.querySelector("#timeline-count").textContent = `${dayIdeas.length} ${dayIdeas.length === 1 ? "idea" : "ideas"}`;
+  const scheduledLabel = `${dayIdeas.length} scheduled`;
+  const everydayLabel = `${everydayIdeas.length} everyday`;
+  document.querySelector("#timeline-count").textContent = everydayIdeas.length ? `${scheduledLabel} · ${everydayLabel}` : scheduledLabel;
+
+  timelineEveryday.hidden = everydayIdeas.length === 0;
+  timelineEveryday.innerHTML = everydayIdeas.length === 0 ? "" : `
+    <div class="timeline-everyday-heading">
+      <strong>Available every day</strong>
+      <span>These ideas can fit wherever there is room.</span>
+    </div>
+    <div class="timeline-everyday-list">
+      ${everydayIdeas.map((idea) => {
+        const safeUrl = idea.infoUrl && /^https?:\/\//i.test(idea.infoUrl) ? escapeHtml(idea.infoUrl) : "";
+        return `<span class="timeline-everyday-item">${escapeHtml(idea.title)}${safeUrl ? ` · <a href="${safeUrl}" target="_blank" rel="noopener noreferrer">info</a>` : ""}</span>`;
+      }).join("")}
+    </div>`;
 
   const positioned = dayIdeas.map((idea) => ({
     ...idea,
@@ -298,11 +339,12 @@ ideaForm.addEventListener("submit", async (event) => {
   const submit = ideaForm.querySelector('[type="submit"]');
   const form = new FormData(ideaForm);
   const audience = form.getAll("audience");
+  const isEveryday = form.get("everyday") === "on";
   if (!audience.length) return toast("Choose who should consider this idea.", true);
-  if (form.get("startsAt") < `${TRIP_START}T00:00` || form.get("endsAt") > `${TRIP_END}T23:59`) {
+  if (!isEveryday && (form.get("startsAt") < `${TRIP_START}T00:00` || form.get("endsAt") > `${TRIP_END}T23:59`)) {
     return toast("Choose dates during the July 18–25 trip.", true);
   }
-  if (form.get("endsAt") <= form.get("startsAt")) return toast("The end time needs to be after the start time.", true);
+  if (!isEveryday && form.get("endsAt") <= form.get("startsAt")) return toast("The end time needs to be after the start time.", true);
 
   submit.disabled = true;
   submit.textContent = "Adding…";
@@ -310,17 +352,20 @@ ideaForm.addEventListener("submit", async (event) => {
     const result = await request("/api/activities", {
       method: "POST",
       body: JSON.stringify({
-        title: form.get("title"), audience, startsAt: form.get("startsAt"), endsAt: form.get("endsAt"),
+        title: form.get("title"), audience, isEveryday, startsAt: form.get("startsAt"), endsAt: form.get("endsAt"),
         infoUrl: form.get("infoUrl"), notes: form.get("notes"), submittedBy: form.get("submittedBy"), website: form.get("website")
       })
     });
     state.activities.push(result.activity);
-    state.activities.sort((a, b) => a.startsAt.localeCompare(b.startsAt));
-    state.filter = "all";
-    document.querySelectorAll(".filter").forEach((button) => button.classList.toggle("active", button.dataset.filter === "all"));
+    state.activities.sort((a, b) => Number(Boolean(b.isEveryday)) - Number(Boolean(a.isEveryday)) || a.startsAt.localeCompare(b.startsAt));
+    state.audienceFilter = "all";
+    state.availabilityFilter = "all";
+    document.querySelectorAll("[data-audience-filter]").forEach((button) => button.classList.toggle("active", button.dataset.audienceFilter === "all"));
+    document.querySelectorAll("[data-availability-filter]").forEach((button) => button.classList.toggle("active", button.dataset.availabilityFilter === "all"));
     renderIdeas();
     renderTimeline();
     ideaForm.reset();
+    syncEverydayFields(false);
     toast("Your idea is on the board!");
     document.querySelector("#ideas").scrollIntoView({ behavior: "smooth" });
   } catch (error) {
@@ -332,11 +377,23 @@ ideaForm.addEventListener("submit", async (event) => {
 });
 
 document.querySelector(".filter-bar").addEventListener("click", (event) => {
-  const button = event.target.closest("[data-filter]");
+  const button = event.target.closest("[data-audience-filter]");
   if (!button) return;
-  state.filter = button.dataset.filter;
-  document.querySelectorAll(".filter").forEach((item) => item.classList.toggle("active", item === button));
+  state.audienceFilter = button.dataset.audienceFilter;
+  document.querySelectorAll("[data-audience-filter]").forEach((item) => item.classList.toggle("active", item === button));
   renderIdeas();
+});
+
+document.querySelector(".availability-filters").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-availability-filter]");
+  if (!button) return;
+  state.availabilityFilter = button.dataset.availabilityFilter;
+  document.querySelectorAll("[data-availability-filter]").forEach((item) => item.classList.toggle("active", item === button));
+  renderIdeas();
+});
+
+document.querySelector("#is-everyday").addEventListener("change", (event) => {
+  syncEverydayFields(event.currentTarget.checked);
 });
 
 document.querySelector(".view-switch").addEventListener("click", (event) => {

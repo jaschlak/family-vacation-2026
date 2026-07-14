@@ -16,6 +16,7 @@ const initialData = {
       id: 1,
       title: "Drive into City & Park",
       audience: ["Everyone"],
+      isEveryday: false,
       startsAt: "2026-07-22T06:00",
       endsAt: "2026-07-22T22:00",
       infoUrl: null,
@@ -27,6 +28,7 @@ const initialData = {
       id: 2,
       title: "9/11 Memorial",
       audience: ["Everyone"],
+      isEveryday: false,
       startsAt: "2026-07-22T06:00",
       endsAt: "2026-07-22T22:00",
       infoUrl: "https://www.911memorial.org/",
@@ -38,6 +40,7 @@ const initialData = {
       id: 3,
       title: "Ferry to Ellis Island and/or Liberty Island",
       audience: ["Everyone"],
+      isEveryday: false,
       startsAt: "2026-07-22T06:00",
       endsAt: "2026-07-22T22:00",
       infoUrl: "https://www.statuecitycruises.com/",
@@ -96,14 +99,16 @@ createServer(async (request, response) => {
       const input = await bodyJson(request);
       const allowed = ["Everyone", "Adults", "Teens", "Kids", "Little kids"];
       const audience = Array.isArray(input?.audience) ? [...new Set(input.audience.filter((item) => allowed.includes(item)))] : [];
-      if (!input?.title?.trim() || !input?.submittedBy?.trim() || !audience.length || input.endsAt <= input.startsAt) {
+      const isEveryday = input?.isEveryday === true;
+      if (!input?.title?.trim() || !input?.submittedBy?.trim() || !audience.length || (!isEveryday && input.endsAt <= input.startsAt)) {
         return sendJson(response, { error: "Add a name, audience, valid time range, and your name." }, 400);
       }
       const data = await loadData();
       const activity = {
         id: Math.max(0, ...data.activities.map((item) => item.id)) + 1,
-        title: input.title.trim().slice(0, 100), audience,
-        startsAt: input.startsAt, endsAt: input.endsAt,
+        title: input.title.trim().slice(0, 100), audience, isEveryday,
+        startsAt: isEveryday ? "2026-07-18T00:00" : input.startsAt,
+        endsAt: isEveryday ? "2026-07-25T23:59" : input.endsAt,
         infoUrl: input.infoUrl?.trim().slice(0, 500) || null,
         notes: input.notes?.trim().slice(0, 2000) || null,
         submittedBy: input.submittedBy.trim().slice(0, 80), createdAt: new Date().toISOString()

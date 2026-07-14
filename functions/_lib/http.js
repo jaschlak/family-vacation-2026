@@ -29,6 +29,7 @@ export function mapActivity(row) {
     id: row.id,
     title: row.title,
     audience: JSON.parse(row.audience),
+    isEveryday: Boolean(row.is_everyday),
     startsAt: row.starts_at,
     endsAt: row.ends_at,
     infoUrl: row.info_url,

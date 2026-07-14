@@ -2,6 +2,8 @@ import { clean, json, mapActivity, readJson } from "../../_lib/http.js";
 
 const AUDIENCES = new Set(["Everyone", "Adults", "Teens", "Kids", "Little kids"]);
 const DATE_TIME_PATTERN = /^2026-07-(1[89]|2[0-5])T([01]\d|2[0-3]):[0-5]\d$/;
+const TRIP_START = "2026-07-18T00:00";
+const TRIP_END = "2026-07-25T23:59";
 
 export async function onRequestPost({ request, env }) {
   const body = await readJson(request);
@@ -9,8 +11,9 @@ export async function onRequestPost({ request, env }) {
   if (clean(body.website, 100)) return json({ error: "Unable to add this idea." }, 400);
 
   const title = clean(body.title, 100);
-  const startsAt = clean(body.startsAt, 16);
-  const endsAt = clean(body.endsAt, 16);
+  const isEveryday = body.isEveryday === true;
+  const startsAt = isEveryday ? TRIP_START : clean(body.startsAt, 16);
+  const endsAt = isEveryday ? TRIP_END : clean(body.endsAt, 16);
   const infoUrl = clean(body.infoUrl, 500);
   const notes = clean(body.notes, 2000);
   const submittedBy = clean(body.submittedBy, 80);
@@ -31,10 +34,10 @@ export async function onRequestPost({ request, env }) {
 
   try {
     const row = await env.DB.prepare(`
-      INSERT INTO activities (title, audience, starts_at, ends_at, info_url, notes, submitted_by)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO activities (title, audience, is_everyday, starts_at, ends_at, info_url, notes, submitted_by)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       RETURNING *
-    `).bind(title, JSON.stringify(audience), startsAt, endsAt, infoUrl || null, notes || null, submittedBy).first();
+    `).bind(title, JSON.stringify(audience), isEveryday ? 1 : 0, startsAt, endsAt, infoUrl || null, notes || null, submittedBy).first();
     return json({ activity: mapActivity(row) }, 201);
   } catch (error) {
     console.error("activity create failed", error);

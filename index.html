@@ -75,12 +75,18 @@
 
           <div id="board-view">
             <div class="filter-bar" aria-label="Filter activity ideas">
-              <button class="filter active" data-filter="all" type="button">All ideas</button>
-              <button class="filter" data-filter="Everyone" type="button">Everyone</button>
-              <button class="filter" data-filter="Adults" type="button">Adults</button>
-              <button class="filter" data-filter="Teens" type="button">Teens</button>
-              <button class="filter" data-filter="Kids" type="button">Kids</button>
-              <button class="filter" data-filter="Little kids" type="button">Little kids</button>
+              <button class="filter active" data-audience-filter="all" type="button">All audiences</button>
+              <button class="filter" data-audience-filter="Everyone" type="button">Everyone</button>
+              <button class="filter" data-audience-filter="Adults" type="button">Adults</button>
+              <button class="filter" data-audience-filter="Teens" type="button">Teens</button>
+              <button class="filter" data-audience-filter="Kids" type="button">Kids</button>
+              <button class="filter" data-audience-filter="Little kids" type="button">Little kids</button>
+            </div>
+            <div class="filter-bar availability-filters" aria-label="Filter ideas by availability">
+              <span class="filter-label">Availability</span>
+              <button class="filter active" data-availability-filter="all" type="button">Include everyday</button>
+              <button class="filter" data-availability-filter="scheduled" type="button">Exclude everyday</button>
+              <button class="filter" data-availability-filter="everyday" type="button">Everyday only</button>
             </div>
             <div class="idea-list" id="idea-list" aria-live="polite">
               <div class="loading-card light">Gathering ideas…</div>
@@ -98,9 +104,11 @@
               <div>
                 <p class="eyebrow coral">Day at a glance</p>
                 <h3 id="timeline-title">Wednesday, July 22</h3>
+                <a class="timeline-weather-link" href="https://forecast.weather.gov/MapClick.php?lat=42.9009&amp;lon=-73.35" target="_blank" rel="noopener noreferrer">Hoosick Falls weather forecast ↗</a>
               </div>
               <p id="timeline-count">3 ideas</p>
             </div>
+            <div class="timeline-everyday" id="timeline-everyday" hidden></div>
             <div class="timeline-choices" id="timeline-choices" hidden></div>
             <div class="timeline-key"><span></span> Overlapping ideas appear side by side</div>
             <div class="timeline-scroll">
@@ -137,12 +145,19 @@
               </div>
             </fieldset>
 
-            <div class="field">
+            <div class="field full everyday-field">
+              <label class="everyday-toggle" for="is-everyday">
+                <input id="is-everyday" name="everyday" type="checkbox" />
+                <span><strong>Available every day</strong><small>Choose this instead of entering a date and time range.</small></span>
+              </label>
+            </div>
+
+            <div class="field time-field">
               <label for="starts-at">Available from</label>
               <input id="starts-at" name="startsAt" type="datetime-local" min="2026-07-18T00:00" max="2026-07-25T23:59" required />
               <span class="field-help">Trip time (Eastern)</span>
             </div>
-            <div class="field">
+            <div class="field time-field">
               <label for="ends-at">Available until</label>
               <input id="ends-at" name="endsAt" type="datetime-local" min="2026-07-18T00:00" max="2026-07-25T23:59" required />
               <span class="field-help">Trip time (Eastern)</span>

@@ -73,6 +73,8 @@ h1 em { color: var(--gold); font-weight: 600; }
 .day-owner strong { display: block; margin-top: 3px; color: var(--forest); font-family: "Fraunces", serif; font-size: 19px; }
 .claim-button { margin-top: auto; padding: 0; border: 0; background: transparent; text-align: left; color: var(--coral); font-weight: 700; cursor: pointer; }
 .claim-button:hover { text-decoration: underline; }
+.weather-link { width: fit-content; margin-top: 11px; color: var(--forest-2); font-size: 11px; font-weight: 700; text-decoration: none; }
+.weather-link:hover { text-decoration: underline; }
 .loading-card { grid-column: 1/-1; padding: 50px; text-align: center; color: var(--muted); }
 
 .ideas-section { padding-block: 110px 120px; color: white; background: var(--forest); }
@@ -83,7 +85,9 @@ h1 em { color: var(--gold); font-weight: 600; }
 .view-button span { color: var(--gold); font-size: 16px; }
 .view-button.active { color: var(--forest); background: var(--paper); }
 .view-button.active span { color: var(--coral); }
-.filter-bar { display: flex; gap: 9px; margin-bottom: 36px; overflow-x: auto; padding-bottom: 4px; }
+.filter-bar { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 4px; }
+.availability-filters { margin-bottom: 36px; }
+.filter-label { flex: 0 0 auto; color: rgba(255,255,255,.52); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .filter { flex: 0 0 auto; border: 1px solid rgba(255,255,255,.22); border-radius: 999px; padding: 9px 15px; color: rgba(255,255,255,.75); background: transparent; cursor: pointer; font-size: 13px; font-weight: 600; }
 .filter.active, .filter:hover { color: var(--forest); background: var(--gold); border-color: var(--gold); }
 .idea-list { display: grid; gap: 16px; }
@@ -91,6 +95,7 @@ h1 em { color: var(--gold); font-weight: 600; }
 .idea-date { text-align: center; border-right: 1px solid var(--line); padding-right: 28px; }
 .idea-date span { display: block; color: var(--coral); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .14em; }
 .idea-date strong { display: block; color: var(--forest); font-family: "Fraunces", serif; font-size: 42px; line-height: 1.1; }
+.idea-date strong.everyday-mark { margin-block: 8px 5px; font-size: 24px; line-height: 1; }
 .idea-date small { color: var(--muted); font-size: 11px; }
 .idea-main h3 { margin: 1px 0 8px; color: var(--forest); font-size: 25px; }
 .idea-main p { margin: 0; color: var(--muted); white-space: pre-line; }
@@ -118,6 +123,8 @@ h1 em { color: var(--gold); font-weight: 600; }
 .timeline-summary { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 18px; }
 .timeline-summary .eyebrow { margin-bottom: 8px; }
 .timeline-summary h3 { margin: 0; color: white; font-size: 32px; }
+.timeline-weather-link { display: inline-block; margin-top: 7px; color: var(--gold); font-size: 11px; font-weight: 700; text-decoration: none; }
+.timeline-weather-link:hover { text-decoration: underline; }
 .timeline-summary > p { margin: 0 0 3px; color: rgba(255,255,255,.6); font-size: 13px; }
 .timeline-choices { margin-bottom: 20px; padding: 18px; border: 1px solid rgba(233,174,81,.38); border-radius: 7px; background: rgba(0,0,0,.13); }
 .timeline-choices-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 15px; margin-bottom: 12px; }
@@ -130,6 +137,13 @@ h1 em { color: var(--gold); font-weight: 600; }
 .timeline-choice h4 { margin: 0 0 5px; color: var(--forest); font-family: "Fraunces", serif; font-size: 16px; line-height: 1.15; }
 .timeline-choice p { margin: 0; color: var(--muted); font-size: 10px; font-weight: 700; }
 .timeline-choice a { display: inline-block; margin-top: 7px; color: #a94a36; font-size: 10px; font-weight: 700; }
+.timeline-everyday { margin-bottom: 20px; padding: 16px 18px; border-radius: 7px; color: var(--ink); background: rgba(185,208,189,.96); }
+.timeline-everyday-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; margin-bottom: 11px; }
+.timeline-everyday-heading strong { color: var(--forest); font-family: "Fraunces", serif; font-size: 19px; }
+.timeline-everyday-heading span { color: var(--muted); font-size: 11px; }
+.timeline-everyday-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.timeline-everyday-item { border-radius: 999px; padding: 7px 11px; color: var(--forest); background: rgba(255,255,255,.72); font-size: 12px; font-weight: 700; }
+.timeline-everyday-item a { color: #a94a36; }
 .timeline-key { position: relative; display: flex; align-items: center; gap: 8px; margin-bottom: 12px; color: rgba(255,255,255,.55); font-size: 11px; }
 .timeline-key span { width: 18px; height: 8px; border-radius: 2px; background: var(--coral); }
 .timeline-scroll { position: relative; z-index: 1; overflow-x: auto; border-radius: 7px; box-shadow: 0 15px 45px rgba(0,0,0,.18); isolation: isolate; }
@@ -172,6 +186,12 @@ h1 em { color: var(--gold); font-weight: 600; }
 .field input, .field textarea { width: 100%; border: 1px solid #d8d4cb; border-radius: 4px; padding: 13px 14px; color: var(--ink); background: white; outline: none; }
 .field input:focus, .field textarea:focus { border-color: var(--forest-2); box-shadow: 0 0 0 3px rgba(36,88,76,.1); }
 .field textarea { resize: vertical; }
+.everyday-toggle { display: flex !important; align-items: center; gap: 12px; margin: 0 !important; border: 1px solid #d8d4cb; border-radius: 5px; padding: 13px 14px; cursor: pointer; }
+.everyday-toggle input { flex: 0 0 auto; width: 18px; height: 18px; margin: 0; accent-color: var(--forest-2); }
+.everyday-toggle span, .everyday-toggle strong, .everyday-toggle small { display: block; }
+.everyday-toggle strong { color: var(--forest); font-weight: 700; }
+.everyday-toggle small { margin-top: 2px; color: var(--muted); font-weight: 400; }
+.time-field[hidden] { display: none; }
 .field-help { display: block; margin: 5px 0 0; color: var(--muted); font-size: 11px; }
 fieldset.field { margin: 0; padding: 0; border: 0; }
 fieldset .field-help { margin-top: -5px; }
