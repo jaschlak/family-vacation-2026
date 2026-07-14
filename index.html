@@ -177,12 +177,19 @@
               <label for="info-url">Link for more information <span>optional</span></label>
               <input id="info-url" name="infoUrl" type="url" maxlength="500" placeholder="https://…" />
             </div>
-            <div class="field">
+            <div class="field full">
+              <label for="location-type">How do you want to add the location?</label>
+              <select id="location-type" name="locationType" data-location-type>
+                <option value="address">Address or place name</option>
+                <option value="maps">Google Maps link</option>
+              </select>
+            </div>
+            <div class="field full" data-location-input="address">
               <label for="location-name">Location or address <span>optional</span></label>
               <input id="location-name" name="locationName" type="text" maxlength="200" placeholder="e.g. 1 Thacher Park Road, Voorheesville, NY" />
               <span class="field-help">Used to include this activity on the locations map.</span>
             </div>
-            <div class="field">
+            <div class="field full" data-location-input="maps" hidden>
               <label for="maps-url">Google Maps link <span>optional</span></label>
               <input id="maps-url" name="mapsUrl" type="url" maxlength="500" placeholder="https://maps.app.goo.gl/…" />
               <span class="field-help">Paste the link from Google Maps’ Share button.</span>
@@ -255,6 +262,37 @@
           <button class="button button-primary full-width" type="submit">Post message</button>
         </form>
       </div>
+    </dialog>
+
+    <dialog id="location-dialog">
+      <form class="dialog-card location-edit-form" id="location-form">
+        <button class="dialog-close" id="location-close" type="button" aria-label="Close">×</button>
+        <p class="eyebrow coral">Event location</p>
+        <h2 id="location-title">Add a location</h2>
+        <p>Choose either a place/address or a link copied from Google Maps.</p>
+        <input type="hidden" id="location-activity-id" name="activityId" />
+        <div class="field">
+          <label for="edit-location-type">Location format</label>
+          <select id="edit-location-type" name="locationType" data-location-type>
+            <option value="address">Address or place name</option>
+            <option value="maps">Google Maps link</option>
+          </select>
+        </div>
+        <div class="field" data-location-input="address">
+          <label for="edit-location-name">Location or address</label>
+          <input id="edit-location-name" name="locationName" type="text" maxlength="200" placeholder="e.g. 1 Thacher Park Road, Voorheesville, NY" />
+        </div>
+        <div class="field" data-location-input="maps" hidden>
+          <label for="edit-maps-url">Google Maps link <span>optional</span></label>
+          <input id="edit-maps-url" name="mapsUrl" type="url" maxlength="500" placeholder="https://maps.app.goo.gl/…" />
+          <span class="field-help">Use Google Maps’ Share → Copy link option.</span>
+        </div>
+        <div class="honeypot" aria-hidden="true">
+          <label for="location-website">Website</label><input id="location-website" name="website" tabindex="-1" autocomplete="off" />
+        </div>
+        <p class="location-edit-note">Anyone with the family site link can update these location fields.</p>
+        <button class="button button-primary full-width" type="submit">Save location</button>
+      </form>
     </dialog>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>

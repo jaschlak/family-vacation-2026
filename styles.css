@@ -152,6 +152,9 @@ h1 em { color: var(--gold); font-weight: 600; }
 .map-link span { color: var(--coral); font-size: 15px; }
 .map-link.compact { margin-top: 7px; margin-right: 3px; font-size: 10px; }
 .map-link.compact span { font-size: 12px; }
+.idea-location-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; min-height: 24px; }
+.location-edit-button { border: 0; padding: 0; color: var(--coral); background: transparent; cursor: pointer; font-size: 11px; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+.location-edit-button:hover { color: #a94a36; }
 .empty-state { padding: 65px 20px; text-align: center; color: rgba(255,255,255,.7); }
 .empty-state span { font-size: 40px; color: var(--gold); }
 .empty-state h3 { margin: 12px 0 6px; color: white; font-size: 28px; }
@@ -282,8 +285,8 @@ h1 em { color: var(--gold); font-weight: 600; }
 .field.full, .full { grid-column: 1 / -1; }
 .field label, .field legend { display: block; margin-bottom: 8px; color: var(--forest); font-size: 13px; font-weight: 700; }
 .field label span { color: var(--muted); font-weight: 400; }
-.field input, .field textarea { width: 100%; border: 1px solid #d8d4cb; border-radius: 4px; padding: 13px 14px; color: var(--ink); background: white; outline: none; }
-.field input:focus, .field textarea:focus { border-color: var(--forest-2); box-shadow: 0 0 0 3px rgba(36,88,76,.1); }
+.field input, .field textarea, .field select { width: 100%; border: 1px solid #d8d4cb; border-radius: 4px; padding: 13px 14px; color: var(--ink); background: white; outline: none; }
+.field input:focus, .field textarea:focus, .field select:focus { border-color: var(--forest-2); box-shadow: 0 0 0 3px rgba(36,88,76,.1); }
 .field textarea { resize: vertical; }
 .everyday-toggle { display: flex !important; align-items: center; gap: 12px; margin: 0 !important; border: 1px solid #d8d4cb; border-radius: 5px; padding: 13px 14px; cursor: pointer; }
 .everyday-toggle input { flex: 0 0 auto; width: 18px; height: 18px; margin: 0; accent-color: var(--forest-2); }
@@ -321,6 +324,8 @@ dialog::backdrop { background: rgba(11,31,27,.72); backdrop-filter: blur(4px); }
 .discussion-form { display: grid; grid-template-columns: 170px 1fr; gap: 14px; }
 .discussion-form .field { margin: 0; }
 .discussion-form .button { grid-column: 1/-1; }
+.location-edit-form h2 { margin-bottom: 10px; font-size: 34px; line-height: 1.15; }
+.location-edit-note { margin: 0 0 16px !important; border-left: 3px solid var(--gold); padding: 7px 10px; color: var(--muted); background: #f3eee4; font-size: 10px; }
 .toast { position: fixed; z-index: 20; right: 24px; bottom: 24px; max-width: 360px; padding: 14px 18px; color: white; border-radius: 5px; background: var(--forest); box-shadow: var(--shadow); transform: translateY(100px); opacity: 0; transition: .25s; pointer-events: none; }
 .toast.show { transform: translateY(0); opacity: 1; }
 .toast.error { background: #8b3f32; }

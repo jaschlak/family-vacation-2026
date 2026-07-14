@@ -170,6 +170,31 @@ createServer(async (request, response) => {
       return sendJson(response, { day });
     }
 
+    const locationRoute = url.pathname.match(/^\/api\/activities\/(\d+)\/location$/);
+    if (locationRoute && request.method === "PUT") {
+      const input = await bodyJson(request);
+      const locationName = typeof input?.locationName === "string" ? input.locationName.trim().slice(0, 200) : "";
+      const mapsUrl = typeof input?.mapsUrl === "string" ? input.mapsUrl.trim().slice(0, 500) : "";
+      if (input?.website) return sendJson(response, { error: "Unable to update that location." }, 400);
+      if (mapsUrl) {
+        try {
+          const map = new URL(mapsUrl);
+          const host = map.hostname.toLowerCase();
+          const valid = map.protocol === "https:" && (host === "maps.app.goo.gl" || (host === "goo.gl" && map.pathname.startsWith("/maps")) || host.startsWith("maps.google.") || (host.includes("google.") && map.pathname.startsWith("/maps")));
+          if (!valid) throw new Error();
+        } catch {
+          return sendJson(response, { error: "The map link needs to be a Google Maps web address." }, 400);
+        }
+      }
+      const data = await loadData();
+      const activity = data.activities.find((item) => item.id === Number(locationRoute[1]));
+      if (!activity) return sendJson(response, { error: "That event no longer exists." }, 404);
+      activity.locationName = locationName || null;
+      activity.mapsUrl = mapsUrl || null;
+      await saveData(data);
+      return sendJson(response, { activity: { id: activity.id, locationName: activity.locationName, mapsUrl: activity.mapsUrl } });
+    }
+
     const voteRoute = url.pathname.match(/^\/api\/activities\/(\d+)\/vote$/);
     if (voteRoute && ["PUT", "DELETE"].includes(request.method)) {
       const input = await bodyJson(request);

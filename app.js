@@ -37,12 +37,23 @@ const ideaForm = document.querySelector("#idea-form");
 const discussionDialog = document.querySelector("#discussion-dialog");
 const discussionForm = document.querySelector("#discussion-form");
 const discussionMessages = document.querySelector("#discussion-messages");
+const locationDialog = document.querySelector("#location-dialog");
+const locationForm = document.querySelector("#location-form");
 
 function syncEverydayFields(everyday) {
   document.querySelectorAll(".time-field").forEach((field) => { field.hidden = everyday; });
   [document.querySelector("#starts-at"), document.querySelector("#ends-at")].forEach((input) => {
     input.disabled = everyday;
     input.required = !everyday;
+  });
+}
+
+function syncLocationInputs(select) {
+  const form = select.closest("form");
+  form.querySelectorAll("[data-location-input]").forEach((field) => {
+    const active = field.dataset.locationInput === select.value;
+    field.hidden = !active;
+    field.querySelectorAll("input").forEach((input) => { input.disabled = !active; });
   });
 }
 
@@ -78,6 +89,14 @@ function mapLink(idea, compact = false) {
   if (!url) return "";
   const label = compact ? "Map" : location || "Open in Google Maps";
   return `<a class="map-link ${compact ? "compact" : ""}" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">⌖</span>${escapeHtml(label)}</a>`;
+}
+
+function locationControls(idea) {
+  const hasLocation = Boolean(idea.locationName || idea.mapsUrl);
+  return `<div class="idea-location-actions">
+    ${mapLink(idea)}
+    <button class="location-edit-button" type="button" data-location-id="${idea.id}">${hasLocation ? "Edit location" : "Add location"}</button>
+  </div>`;
 }
 
 function eventDescription(idea, safeUrl, wordLimit = 40, compact = false) {
@@ -179,7 +198,7 @@ function renderIdeas() {
         </div>
         <div class="idea-main">
           <h3>${escapeHtml(idea.title)}</h3>
-          ${mapLink(idea)}
+          ${locationControls(idea)}
           <div class="idea-meta">
             ${idea.audience.map((group) => `<span class="tag">${escapeHtml(group)}</span>`).join("")}
             <span class="tag submitted">Added by ${escapeHtml(idea.submittedBy)}</span>
@@ -424,6 +443,20 @@ function openDiscussion(activityId) {
   loadDiscussion(activityId);
 }
 
+function openLocationEditor(activityId) {
+  const activity = state.activities.find((idea) => idea.id === activityId);
+  if (!activity) return;
+  locationForm.reset();
+  document.querySelector("#location-activity-id").value = activityId;
+  document.querySelector("#location-title").textContent = `Location for ${activity.title}`;
+  const locationType = document.querySelector("#edit-location-type");
+  locationType.value = activity.mapsUrl ? "maps" : "address";
+  document.querySelector("#edit-location-name").value = activity.locationName || "";
+  document.querySelector("#edit-maps-url").value = activity.mapsUrl || "";
+  syncLocationInputs(locationType);
+  locationDialog.showModal();
+}
+
 async function loadTrip() {
   try {
     const data = await request("/api/trip");
@@ -495,7 +528,9 @@ ideaForm.addEventListener("submit", async (event) => {
       method: "POST",
       body: JSON.stringify({
         title: form.get("title"), audience, isEveryday, startsAt: form.get("startsAt"), endsAt: form.get("endsAt"),
-        infoUrl: form.get("infoUrl"), locationName: form.get("locationName"), mapsUrl: form.get("mapsUrl"),
+        infoUrl: form.get("infoUrl"),
+        locationName: form.get("locationType") === "address" ? form.get("locationName") : "",
+        mapsUrl: form.get("locationType") === "maps" ? form.get("mapsUrl") : "",
         notes: form.get("notes"), submittedBy: form.get("submittedBy"), website: form.get("website")
       })
     });
@@ -509,6 +544,7 @@ ideaForm.addEventListener("submit", async (event) => {
     renderTimeline();
     ideaForm.reset();
     syncEverydayFields(false);
+    syncLocationInputs(document.querySelector("#location-type"));
     toast("Your idea is on the board!");
     document.querySelector("#ideas").scrollIntoView({ behavior: "smooth" });
   } catch (error) {
@@ -539,7 +575,17 @@ document.querySelector("#is-everyday").addEventListener("change", (event) => {
   syncEverydayFields(event.currentTarget.checked);
 });
 
+document.querySelectorAll("[data-location-type]").forEach((select) => {
+  select.addEventListener("change", () => syncLocationInputs(select));
+  syncLocationInputs(select);
+});
+
 document.querySelector(".ideas-section").addEventListener("click", async (event) => {
+  const location = event.target.closest("[data-location-id]");
+  if (location) {
+    openLocationEditor(Number(location.dataset.locationId));
+    return;
+  }
   const discussion = event.target.closest("[data-discussion-id]");
   if (discussion) {
     openDiscussion(Number(discussion.dataset.discussionId));
@@ -599,6 +645,42 @@ discussionForm.addEventListener("submit", async (event) => {
 });
 
 document.querySelector("#discussion-close").addEventListener("click", () => discussionDialog.close());
+
+locationForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const form = new FormData(locationForm);
+  const activityId = Number(form.get("activityId"));
+  const activity = state.activities.find((idea) => idea.id === activityId);
+  const submit = locationForm.querySelector('[type="submit"]');
+  submit.disabled = true;
+  submit.textContent = "Saving…";
+  try {
+    const locationType = form.get("locationType");
+    const result = await request(`/api/activities/${activityId}/location`, {
+      method: "PUT",
+      body: JSON.stringify({
+        locationName: locationType === "address" ? form.get("locationName") : "",
+        mapsUrl: locationType === "maps" ? form.get("mapsUrl") : "",
+        website: form.get("website")
+      })
+    });
+    if (activity) {
+      activity.locationName = result.activity.locationName;
+      activity.mapsUrl = result.activity.mapsUrl;
+    }
+    renderIdeas();
+    renderTimeline();
+    locationDialog.close();
+    toast(result.activity.locationName || result.activity.mapsUrl ? "Location saved." : "Location removed.");
+  } catch (error) {
+    toast(error.message, true);
+  } finally {
+    submit.disabled = false;
+    submit.textContent = "Save location";
+  }
+});
+
+document.querySelector("#location-close").addEventListener("click", () => locationDialog.close());
 
 document.querySelector(".view-switch").addEventListener("click", (event) => {
   const button = event.target.closest("[data-view]");

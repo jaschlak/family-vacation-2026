@@ -5,6 +5,7 @@ A small family planning site for July 18–25, 2026. Relatives can:
 - Claim one of the eight vacation days for their family to lead.
 - Add activity and location ideas with an audience, scheduled time or everyday availability, link, notes, and contributor name.
 - Save a place/address and Google Maps Share link for an activity, then review all saved destinations on the Locations page.
+- Add, change, or remove an existing activity’s location from its card on the public idea board.
 - Filter ideas for everyone, adults, seniors, teens, kids, or little kids.
 - Vote for ideas without creating an account.
 - Use a shared group chat and discuss individual activity ideas.
@@ -110,6 +111,6 @@ These commands modify production data immediately. Always run the list command f
 
 ## Privacy and maintenance notes
 
-- The site is public-by-link. Contributor names, chat posts, and event discussions are visible. Do not add private addresses, door codes, or sensitive travel details.
+- The site is public-by-link. Contributor names, chat posts, event discussions, and location fields are visible. Anyone with the link can update an activity’s location, so do not add private addresses, door codes, or sensitive travel details.
 - A claim is intentionally first-come, first-served. Editing or releasing claims should be done in the D1 dashboard for now, which prevents anonymous visitors from changing someone else’s day.
 - Before broadly sharing the URL, consider enabling Cloudflare Web Analytics and a basic WAF rate-limit rule for `/api/*` if traffic becomes noisy.
