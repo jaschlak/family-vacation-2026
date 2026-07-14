@@ -203,18 +203,18 @@ function renderTimeline() {
       ${hours.map((hour) => `<div class="timeline-hour" style="top:${(hour - startHour) * 60 * pixelsPerMinute}px"><span>${hourLabel(hour)}</span></div>`).join("")}
     </div>
     <div class="timeline-events">
-      ${laidOut.map((idea) => {
+      ${laidOut.map((idea, index) => {
         const top = (idea.startMinute - startHour * 60) * pixelsPerMinute + 3;
         const heightPx = Math.max(42, (idea.endMinute - idea.startMinute) * pixelsPerMinute - 6);
-        const left = (idea.lane / idea.lanes) * 100;
-        const width = 100 / idea.lanes;
         const safeUrl = idea.infoUrl && /^https?:\/\//i.test(idea.infoUrl) ? escapeHtml(idea.infoUrl) : "";
-        return `<article class="timeline-event" style="top:${top}px;height:${heightPx}px;left:calc(${left}% + 3px);width:calc(${width}% - 6px)">
-          <h4>${escapeHtml(idea.title)}</h4>
-          <p class="timeline-event-time">${rangeLabel(idea.startsAt, idea.endsAt)}</p>
-          ${idea.notes ? `<p class="timeline-event-notes">${escapeHtml(idea.notes)}</p>` : ""}
-          ${safeUrl ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">More info ↗</a>` : ""}
-        </article>`;
+        return `<div class="timeline-event-position" style="top:${top}px;height:${heightPx}px;--lanes:${idea.lanes}">
+          <article class="timeline-event tone-${index % 3 + 1}" style="grid-column:${idea.lane + 1}">
+            <h4>${escapeHtml(idea.title)}</h4>
+            <p class="timeline-event-time">${rangeLabel(idea.startsAt, idea.endsAt)}</p>
+            ${idea.notes ? `<p class="timeline-event-notes">${escapeHtml(idea.notes)}</p>` : ""}
+            ${safeUrl ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">More info ↗</a>` : ""}
+          </article>
+        </div>`;
       }).join("")}
     </div>
     ${dayIdeas.length ? "" : `<div class="timeline-empty"><span>☀</span><h4>Nothing scheduled yet</h4><p>Add an idea for this day below.</p></div>`}
