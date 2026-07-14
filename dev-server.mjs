@@ -66,11 +66,13 @@ async function saveData(data) {
 
 function tripPayload(data) {
   const votes = Array.isArray(data.votes) ? data.votes : [];
+  const messages = Array.isArray(data.messages) ? data.messages : [];
   return {
     days: data.days,
     activities: data.activities.map((activity) => ({
       ...activity,
-      voteCount: votes.filter((vote) => vote.activityId === activity.id).length
+      voteCount: votes.filter((vote) => vote.activityId === activity.id).length,
+      discussionCount: messages.filter((message) => message.activityId === activity.id).length
     }))
   };
 }
@@ -92,6 +94,45 @@ createServer(async (request, response) => {
   const url = new URL(request.url, `http://${request.headers.host}`);
   try {
     if (url.pathname === "/api/trip" && request.method === "GET") return sendJson(response, tripPayload(await loadData()));
+
+    if (url.pathname === "/api/messages" && request.method === "GET") {
+      const rawActivityId = url.searchParams.get("activityId");
+      const activityId = rawActivityId === null || rawActivityId === "" ? null : Number(rawActivityId);
+      if (activityId !== null && (!Number.isSafeInteger(activityId) || activityId < 1)) {
+        return sendJson(response, { error: "Choose a valid event discussion." }, 400);
+      }
+      const data = await loadData();
+      if (activityId !== null && !data.activities.some((activity) => activity.id === activityId)) {
+        return sendJson(response, { error: "That event no longer exists." }, 404);
+      }
+      const messages = (Array.isArray(data.messages) ? data.messages : [])
+        .filter((message) => (message.activityId ?? null) === activityId)
+        .slice(-100);
+      return sendJson(response, { messages });
+    }
+
+    if (url.pathname === "/api/messages" && request.method === "POST") {
+      const input = await bodyJson(request);
+      const activityId = input?.activityId === null || input?.activityId === undefined || input?.activityId === "" ? null : Number(input.activityId);
+      const author = typeof input?.author === "string" ? input.author.trim().slice(0, 80) : "";
+      const messageText = typeof input?.message === "string" ? input.message.trim().slice(0, 1000) : "";
+      if (input?.website || (activityId !== null && (!Number.isSafeInteger(activityId) || activityId < 1))) {
+        return sendJson(response, { error: "Unable to post that message." }, 400);
+      }
+      if (author.length < 2 || !messageText) return sendJson(response, { error: "Add your name and a message." }, 400);
+      const data = await loadData();
+      if (activityId !== null && !data.activities.some((activity) => activity.id === activityId)) {
+        return sendJson(response, { error: "That event no longer exists." }, 404);
+      }
+      if (!Array.isArray(data.messages)) data.messages = [];
+      const message = {
+        id: Math.max(0, ...data.messages.map((item) => Number(item.id) || 0)) + 1,
+        activityId, author, message: messageText, createdAt: new Date().toISOString()
+      };
+      data.messages.push(message);
+      await saveData(data);
+      return sendJson(response, { message }, 201);
+    }
 
     if (url.pathname === "/api/weather" && request.method === "GET") {
       const forecastResponse = await fetch(nwsForecastUrl, {

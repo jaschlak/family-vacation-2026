@@ -14,5 +14,8 @@
 /weather-page.js
   Cache-Control: public, max-age=0, must-revalidate
 
+/chat.js
+  Cache-Control: public, max-age=0, must-revalidate
+
 /api/*
   Cache-Control: no-store

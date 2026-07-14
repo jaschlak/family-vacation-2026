@@ -6,6 +6,7 @@ A small family planning site for July 18–25, 2026. Relatives can:
 - Add activity and location ideas with an audience, scheduled time or everyday availability, link, notes, and contributor name.
 - Filter ideas for everyone, adults, seniors, teens, kids, or little kids.
 - Vote for ideas without creating an account.
+- Use a shared group chat and discuss individual activity ideas.
 - Switch to a day timeline that places ideas vertically by time and shows overlapping choices side by side.
 
 The production site is designed for **Cloudflare Pages + D1**. D1 is Cloudflare’s managed SQLite-compatible database, so claims and ideas persist independently of a deployment or maintenance restart. The site intentionally has no account requirement; anyone with the public URL can contribute.
@@ -74,16 +75,40 @@ Clear every vote while keeping all activities:
 ..\roots_capoeira_site\npm-local.cmd exec -- wrangler d1 execute family-vacation-2026 --remote --command "DELETE FROM activity_votes;"
 ```
 
-Delete one activity and its votes, replacing `3` with its ID:
+List recent group-chat and event-discussion messages:
 
 ```powershell
-..\roots_capoeira_site\npm-local.cmd exec -- wrangler d1 execute family-vacation-2026 --remote --command "DELETE FROM activity_votes WHERE activity_id = 3; DELETE FROM activities WHERE id = 3;"
+..\roots_capoeira_site\npm-local.cmd exec -- wrangler d1 execute family-vacation-2026 --remote --command "SELECT messages.id, messages.author, messages.message, messages.created_at, activities.title AS activity FROM messages LEFT JOIN activities ON activities.id = messages.activity_id ORDER BY messages.id DESC LIMIT 100;"
+```
+
+Delete one message, replacing `12` with its ID:
+
+```powershell
+..\roots_capoeira_site\npm-local.cmd exec -- wrangler d1 execute family-vacation-2026 --remote --command "DELETE FROM messages WHERE id = 12;"
+```
+
+Clear the group chat while preserving event discussions:
+
+```powershell
+..\roots_capoeira_site\npm-local.cmd exec -- wrangler d1 execute family-vacation-2026 --remote --command "DELETE FROM messages WHERE activity_id IS NULL;"
+```
+
+Clear one event discussion, replacing `3` with the activity ID:
+
+```powershell
+..\roots_capoeira_site\npm-local.cmd exec -- wrangler d1 execute family-vacation-2026 --remote --command "DELETE FROM messages WHERE activity_id = 3;"
+```
+
+Delete one activity, its votes, and its discussion, replacing `3` with its ID:
+
+```powershell
+..\roots_capoeira_site\npm-local.cmd exec -- wrangler d1 execute family-vacation-2026 --remote --command "DELETE FROM messages WHERE activity_id = 3; DELETE FROM activity_votes WHERE activity_id = 3; DELETE FROM activities WHERE id = 3;"
 ```
 
 These commands modify production data immediately. Always run the list command first and double-check the ID and title.
 
 ## Privacy and maintenance notes
 
-- The site is public-by-link and contributor names are visible. Do not add private addresses, door codes, or sensitive travel details.
+- The site is public-by-link. Contributor names, chat posts, and event discussions are visible. Do not add private addresses, door codes, or sensitive travel details.
 - A claim is intentionally first-come, first-served. Editing or releasing claims should be done in the D1 dashboard for now, which prevents anonymous visitors from changing someone else’s day.
 - Before broadly sharing the URL, consider enabling Cloudflare Web Analytics and a basic WAF rate-limit rule for `/api/*` if traffic becomes noisy.

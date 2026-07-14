@@ -5,10 +5,10 @@ export async function onRequestGet({ env }) {
     const [days, activities] = await Promise.all([
       env.DB.prepare("SELECT * FROM trip_days ORDER BY trip_date").all(),
       env.DB.prepare(`
-        SELECT activities.*, COUNT(activity_votes.voter_id) AS vote_count
+        SELECT activities.*,
+          (SELECT COUNT(*) FROM activity_votes WHERE activity_votes.activity_id = activities.id) AS vote_count,
+          (SELECT COUNT(*) FROM messages WHERE messages.activity_id = activities.id) AS discussion_count
         FROM activities
-        LEFT JOIN activity_votes ON activity_votes.activity_id = activities.id
-        GROUP BY activities.id
         ORDER BY is_everyday DESC, starts_at, created_at
       `).all()
     ]);

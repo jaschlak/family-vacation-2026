@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#173c35" />
+    <meta name="description" content="Family group chat for our July 18–25, 2026 vacation." />
+    <title>Group Chat · Our Week Away</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/chat.js" type="module"></script>
+  </head>
+  <body>
+    <header class="page-hero">
+      <nav class="nav shell" aria-label="Primary navigation">
+        <a class="brand" href="/" aria-label="Our Week Away home">
+          <span class="brand-mark" aria-hidden="true">✦</span>
+          <span>Our Week Away</span>
+        </a>
+        <div class="nav-links">
+          <a class="nav-tab" href="/">Planner</a>
+          <a class="nav-tab" href="/weather.html">Weather</a>
+          <a class="nav-tab active" href="/chat.html" aria-current="page">Chat</a>
+          <a class="button button-small button-light" href="/#add-idea">Add an idea</a>
+        </div>
+      </nav>
+      <div class="page-hero-content shell">
+        <p class="eyebrow">Family group chat</p>
+        <h1>Talk through<br /><em>the adventure.</em></h1>
+        <p>Share questions, updates, and ideas with everyone. Event-specific conversations stay with their event on the planner.</p>
+      </div>
+    </header>
+
+    <main class="chat-page">
+      <section class="shell chat-layout">
+        <div class="chat-panel">
+          <div class="chat-heading">
+            <div><p class="eyebrow dark">Everyone</p><h2>Group conversation</h2></div>
+            <button class="refresh-chat" id="refresh-chat" type="button">Refresh</button>
+          </div>
+          <div class="message-list" id="message-list" aria-live="polite">
+            <div class="chat-empty">Loading the conversation…</div>
+          </div>
+          <form class="message-form" id="message-form">
+            <div class="field">
+              <label for="chat-author">Your name</label>
+              <input id="chat-author" name="author" maxlength="80" autocomplete="name" required />
+            </div>
+            <div class="field">
+              <label for="chat-message">Message</label>
+              <textarea id="chat-message" name="message" maxlength="1000" rows="3" placeholder="What should the family know?" required></textarea>
+            </div>
+            <div class="honeypot" aria-hidden="true">
+              <label for="chat-website">Website</label><input id="chat-website" name="website" tabindex="-1" autocomplete="off" />
+            </div>
+            <div class="message-form-footer">
+              <p>Visible to anyone with the site link.</p>
+              <button class="button button-primary" type="submit">Send message →</button>
+            </div>
+          </form>
+          <p class="chat-status" id="chat-status" role="status" aria-live="polite"></p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="shell footer-inner">
+        <div><span class="brand-mark">✦</span><strong>Our Week Away</strong></div>
+        <p>July 18–25, 2026 · Hoosick Falls, New York</p>
+      </div>
+    </footer>
+  </body>
+</html>

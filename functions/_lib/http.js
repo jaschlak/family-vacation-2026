@@ -31,6 +31,7 @@ export function mapActivity(row) {
     audience: JSON.parse(row.audience),
     isEveryday: Boolean(row.is_everyday),
     voteCount: Number(row.vote_count || 0),
+    discussionCount: Number(row.discussion_count || 0),
     startsAt: row.starts_at,
     endsAt: row.ends_at,
     infoUrl: row.info_url,

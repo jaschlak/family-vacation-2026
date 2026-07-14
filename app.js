@@ -2,6 +2,7 @@ const TRIP_START = "2026-07-18";
 const TRIP_END = "2026-07-25";
 const VOTER_KEY = "family-vacation-voter-id";
 const VOTED_KEY = "family-vacation-voted-activities";
+const NAME_KEY = "family-vacation-display-name";
 
 function storedValue(key) {
   try { return localStorage.getItem(key); } catch { return null; }
@@ -33,6 +34,9 @@ const timelineEveryday = document.querySelector("#timeline-everyday");
 const claimDialog = document.querySelector("#claim-dialog");
 const claimForm = document.querySelector("#claim-form");
 const ideaForm = document.querySelector("#idea-form");
+const discussionDialog = document.querySelector("#discussion-dialog");
+const discussionForm = document.querySelector("#discussion-form");
+const discussionMessages = document.querySelector("#discussion-messages");
 
 function syncEverydayFields(everyday) {
   document.querySelectorAll(".time-field").forEach((field) => { field.hidden = everyday; });
@@ -52,6 +56,14 @@ function voteButton(idea, compact = false) {
   return `<button class="vote-button ${compact ? "compact" : ""} ${voted ? "voted" : ""}" type="button"
     data-vote-id="${idea.id}" aria-pressed="${voted}" aria-label="${voted ? "Remove your vote from" : "Vote for"} ${escapeHtml(idea.title)}">
     <span aria-hidden="true">♥</span> ${voted ? "Voted" : "Vote"} <strong>${count}</strong>
+  </button>`;
+}
+
+function discussionButton(idea, compact = false) {
+  const count = Number(idea.discussionCount || 0);
+  return `<button class="discussion-button ${compact ? "compact" : ""}" type="button" data-discussion-id="${idea.id}"
+    aria-label="Open discussion for ${escapeHtml(idea.title)}">
+    <span aria-hidden="true">↗</span> Discuss${count ? ` <strong>${count}</strong>` : ""}
   </button>`;
 }
 
@@ -158,6 +170,7 @@ function renderIdeas() {
             ${idea.audience.map((group) => `<span class="tag">${escapeHtml(group)}</span>`).join("")}
             <span class="tag submitted">Added by ${escapeHtml(idea.submittedBy)}</span>
             ${voteButton(idea)}
+            ${discussionButton(idea)}
           </div>
           ${details}
         </div>
@@ -264,7 +277,7 @@ function renderTimeline() {
     <div class="timeline-everyday-list">
       ${everydayIdeas.map((idea) => {
         const safeUrl = idea.infoUrl && /^https?:\/\//i.test(idea.infoUrl) ? escapeHtml(idea.infoUrl) : "";
-        return `<span class="timeline-everyday-item">${escapeHtml(idea.title)}${safeUrl ? ` · <a href="${safeUrl}" target="_blank" rel="noopener noreferrer">info</a>` : ""} ${voteButton(idea, true)}</span>`;
+        return `<span class="timeline-everyday-item">${escapeHtml(idea.title)}${safeUrl ? ` · <a href="${safeUrl}" target="_blank" rel="noopener noreferrer">info</a>` : ""} ${voteButton(idea, true)} ${discussionButton(idea, true)}</span>`;
       }).join("")}
     </div>`;
 
@@ -305,6 +318,7 @@ function renderTimeline() {
           <h4>${escapeHtml(idea.title)}</h4>
           <p>${rangeLabel(idea.startsAt, idea.endsAt)}</p>
           ${voteButton(idea, true)}
+          ${discussionButton(idea, true)}
           ${eventDescription(idea, safeUrl, 22, true)}
         </article>`;
       }).join("")}
@@ -326,6 +340,7 @@ function renderTimeline() {
             <h4>${escapeHtml(idea.title)}</h4>
             <p class="timeline-event-time">${rangeLabel(idea.startsAt, idea.endsAt)}</p>
             ${voteButton(idea, true)}
+            ${discussionButton(idea, true)}
             ${eventDescription(idea, safeUrl, 18, true)}
           </article>
         </div>`;
@@ -352,6 +367,45 @@ async function request(path, options = {}) {
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(payload.error || "Something went wrong. Please try again.");
   return payload;
+}
+
+function messageTime(value) {
+  const normalized = value.includes("T") ? value : `${value.replace(" ", "T")}Z`;
+  const date = new Date(normalized);
+  return Number.isNaN(date.valueOf()) ? "" : new Intl.DateTimeFormat("en-US", {
+    month: "short", day: "numeric", hour: "numeric", minute: "2-digit"
+  }).format(date);
+}
+
+function renderDiscussionMessages(messages) {
+  discussionMessages.innerHTML = messages.length ? messages.map((item) => `
+    <article class="chat-message">
+      <div class="message-meta"><strong>${escapeHtml(item.author)}</strong><time>${escapeHtml(messageTime(item.createdAt))}</time></div>
+      <p>${escapeHtml(item.message)}</p>
+    </article>
+  `).join("") : `<div class="chat-empty"><strong>No messages yet.</strong><span>Start the conversation about this event.</span></div>`;
+  discussionMessages.scrollTop = discussionMessages.scrollHeight;
+}
+
+async function loadDiscussion(activityId) {
+  discussionMessages.innerHTML = `<div class="chat-empty">Loading the discussion…</div>`;
+  try {
+    const result = await request(`/api/messages?activityId=${activityId}`);
+    renderDiscussionMessages(result.messages);
+  } catch (error) {
+    discussionMessages.innerHTML = `<div class="chat-empty error">${escapeHtml(error.message)}</div>`;
+  }
+}
+
+function openDiscussion(activityId) {
+  const activity = state.activities.find((idea) => idea.id === activityId);
+  if (!activity) return;
+  discussionForm.reset();
+  document.querySelector("#discussion-activity-id").value = activityId;
+  document.querySelector("#discussion-title").textContent = activity.title;
+  document.querySelector("#discussion-author").value = storedValue(NAME_KEY) || "";
+  discussionDialog.showModal();
+  loadDiscussion(activityId);
 }
 
 async function loadTrip() {
@@ -469,6 +523,11 @@ document.querySelector("#is-everyday").addEventListener("change", (event) => {
 });
 
 document.querySelector(".ideas-section").addEventListener("click", async (event) => {
+  const discussion = event.target.closest("[data-discussion-id]");
+  if (discussion) {
+    openDiscussion(Number(discussion.dataset.discussionId));
+    return;
+  }
   const button = event.target.closest("[data-vote-id]");
   if (!button) return;
   const id = Number(button.dataset.voteId);
@@ -493,6 +552,36 @@ document.querySelector(".ideas-section").addEventListener("click", async (event)
     document.querySelectorAll(`[data-vote-id="${id}"]`).forEach((item) => { item.disabled = false; });
   }
 });
+
+discussionForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const form = new FormData(discussionForm);
+  const activityId = Number(form.get("activityId"));
+  const activity = state.activities.find((idea) => idea.id === activityId);
+  const submit = discussionForm.querySelector('[type="submit"]');
+  submit.disabled = true;
+  submit.textContent = "Posting…";
+  try {
+    const author = String(form.get("author")).trim();
+    await request("/api/messages", {
+      method: "POST",
+      body: JSON.stringify({ activityId, author, message: form.get("message"), website: form.get("website") })
+    });
+    saveValue(NAME_KEY, author);
+    discussionForm.querySelector("textarea").value = "";
+    if (activity) activity.discussionCount = Number(activity.discussionCount || 0) + 1;
+    renderIdeas();
+    renderTimeline();
+    await loadDiscussion(activityId);
+  } catch (error) {
+    toast(error.message, true);
+  } finally {
+    submit.disabled = false;
+    submit.textContent = "Post message";
+  }
+});
+
+document.querySelector("#discussion-close").addEventListener("click", () => discussionDialog.close());
 
 document.querySelector(".view-switch").addEventListener("click", (event) => {
   const button = event.target.closest("[data-view]");
