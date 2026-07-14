@@ -103,6 +103,12 @@
 
           <div class="timeline-view" id="timeline-view" hidden>
             <div class="timeline-days" id="timeline-days" aria-label="Choose a day"></div>
+            <div class="timeline-conflict-controls" aria-label="Choose how overlapping events are shown">
+              <span>Overlapping events</span>
+              <button class="timeline-filter active" data-timeline-filter="all" type="button" aria-pressed="true">Side by side</button>
+              <button class="timeline-filter" data-timeline-filter="winners" type="button" aria-pressed="false">Most voted</button>
+            </div>
+            <p class="timeline-filter-note" id="timeline-filter-note" aria-live="polite" hidden></p>
             <div class="timeline-summary">
               <div>
                 <p class="eyebrow coral">Day at a glance</p>
@@ -112,7 +118,7 @@
             </div>
             <div class="timeline-everyday" id="timeline-everyday" hidden></div>
             <div class="timeline-choices" id="timeline-choices" hidden></div>
-            <div class="timeline-key"><span></span> Overlapping ideas appear side by side</div>
+            <div class="timeline-key"><span></span><b id="timeline-key-label">Overlapping ideas appear side by side</b></div>
             <div class="timeline-scroll">
               <div class="timeline" id="timeline" aria-live="polite"></div>
             </div>

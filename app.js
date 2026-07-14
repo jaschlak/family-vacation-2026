@@ -20,7 +20,7 @@ try {
   votedActivities = new Set();
 }
 
-const state = { days: [], activities: [], audienceFilter: "all", availabilityFilter: "all", view: "board", timelineDate: "2026-07-22" };
+const state = { days: [], activities: [], audienceFilter: "all", availabilityFilter: "all", timelineConflictFilter: "all", view: "board", timelineDate: "2026-07-22" };
 const dayGrid = document.querySelector("#day-grid");
 const ideaList = document.querySelector("#idea-list");
 const emptyState = document.querySelector("#empty-state");
@@ -188,7 +188,7 @@ function hourLabel(hour) {
   return `${hour > 12 ? hour - 12 : hour} ${hour > 12 ? "PM" : "AM"}`;
 }
 
-function assignOverlapLanes(items) {
+function overlapClusters(items) {
   const sorted = [...items].sort((a, b) => a.startMinute - b.startMinute || a.endMinute - b.endMinute);
   const clusters = [];
   let cluster = [];
@@ -204,6 +204,19 @@ function assignOverlapLanes(items) {
     clusterEnd = Math.max(clusterEnd, item.endMinute);
   }
   if (cluster.length) clusters.push(cluster);
+  return clusters;
+}
+
+function mostVotedConflicts(items) {
+  return overlapClusters(items).flatMap((group) => {
+    if (group.length < 2) return group;
+    const highestVote = Math.max(...group.map((idea) => Number(idea.voteCount || 0)));
+    return group.filter((idea) => Number(idea.voteCount || 0) === highestVote);
+  });
+}
+
+function assignOverlapLanes(items) {
+  const clusters = overlapClusters(items);
 
   for (const group of clusters) {
     const laneEnds = [];
@@ -215,7 +228,7 @@ function assignOverlapLanes(items) {
     }
     group.forEach((item) => { item.lanes = laneEnds.length; });
   }
-  return sorted;
+  return clusters.flat();
 }
 
 function renderTimelineDays() {
@@ -255,11 +268,21 @@ function renderTimeline() {
       }).join("")}
     </div>`;
 
-  const positioned = dayIdeas.map((idea) => ({
+  const allPositioned = dayIdeas.map((idea) => ({
     ...idea,
     startMinute: minutesOnDay(idea.startsAt, state.timelineDate),
     endMinute: minutesOnDay(idea.endsAt, state.timelineDate, true)
   }));
+  const positioned = state.timelineConflictFilter === "winners" ? mostVotedConflicts(allPositioned) : allPositioned;
+  const hiddenCount = allPositioned.length - positioned.length;
+  const filterNote = document.querySelector("#timeline-filter-note");
+  document.querySelector("#timeline-key-label").textContent = state.timelineConflictFilter === "winners"
+    ? "Tied top choices appear side by side"
+    : "Overlapping ideas appear side by side";
+  filterNote.hidden = state.timelineConflictFilter !== "winners" || hiddenCount === 0;
+  filterNote.textContent = hiddenCount
+    ? `${hiddenCount} lower-voted overlapping ${hiddenCount === 1 ? "idea is" : "ideas are"} hidden. Tied top choices remain visible.`
+    : "";
   const startHour = positioned.length ? Math.floor(Math.min(...positioned.map((idea) => idea.startMinute)) / 60) : 8;
   const naturalEnd = positioned.length ? Math.ceil(Math.max(...positioned.map((idea) => idea.endMinute)) / 60) : 20;
   const endHour = Math.min(24, Math.max(startHour + 4, naturalEnd));
@@ -272,8 +295,8 @@ function renderTimeline() {
   timelineChoices.hidden = overlapping.length < 2;
   timelineChoices.innerHTML = overlapping.length < 2 ? "" : `
     <div class="timeline-choices-heading">
-      <strong>${overlapping.length} overlapping choices</strong>
-      <span>These options share part or all of the same time range.</span>
+      <strong>${state.timelineConflictFilter === "winners" ? `${overlapping.length} tied top choices` : `${overlapping.length} overlapping choices`}</strong>
+      <span>${state.timelineConflictFilter === "winners" ? "These ideas share the highest vote total." : "These options share part or all of the same time range."}</span>
     </div>
     <div class="timeline-choice-grid">
       ${overlapping.map((idea) => {
@@ -483,6 +506,18 @@ document.querySelector(".view-switch").addEventListener("click", (event) => {
     item.setAttribute("aria-pressed", String(active));
   });
   if (state.view === "timeline") renderTimeline();
+});
+
+document.querySelector(".timeline-conflict-controls").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-timeline-filter]");
+  if (!button) return;
+  state.timelineConflictFilter = button.dataset.timelineFilter;
+  document.querySelectorAll("[data-timeline-filter]").forEach((item) => {
+    const active = item === button;
+    item.classList.toggle("active", active);
+    item.setAttribute("aria-pressed", String(active));
+  });
+  renderTimeline();
 });
 
 timelineDays.addEventListener("click", (event) => {
