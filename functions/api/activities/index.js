@@ -15,6 +15,8 @@ export async function onRequestPost({ request, env }) {
   const startsAt = isEveryday ? TRIP_START : clean(body.startsAt, 16);
   const endsAt = isEveryday ? TRIP_END : clean(body.endsAt, 16);
   const infoUrl = clean(body.infoUrl, 500);
+  const locationName = clean(body.locationName, 200);
+  const mapsUrl = clean(body.mapsUrl, 500);
   const notes = clean(body.notes, 2000);
   const submittedBy = clean(body.submittedBy, 80);
   const audience = [...new Set(Array.isArray(body.audience) ? body.audience.filter((item) => AUDIENCES.has(item)) : [])];
@@ -31,13 +33,28 @@ export async function onRequestPost({ request, env }) {
       return json({ error: "The information link needs to be a full web address." }, 400);
     }
   }
+  if (mapsUrl) {
+    try {
+      const url = new URL(mapsUrl);
+      const host = url.hostname.toLowerCase();
+      const isGoogleMaps = url.protocol === "https:" && (
+        host === "maps.app.goo.gl"
+        || (host === "goo.gl" && url.pathname.startsWith("/maps"))
+        || host.startsWith("maps.google.")
+        || (host.includes("google.") && url.pathname.startsWith("/maps"))
+      );
+      if (!isGoogleMaps) throw new Error();
+    } catch {
+      return json({ error: "The map link needs to be a Google Maps web address." }, 400);
+    }
+  }
 
   try {
     const row = await env.DB.prepare(`
-      INSERT INTO activities (title, audience, is_everyday, starts_at, ends_at, info_url, notes, submitted_by)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO activities (title, audience, is_everyday, starts_at, ends_at, info_url, location_name, maps_url, notes, submitted_by)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       RETURNING *
-    `).bind(title, JSON.stringify(audience), isEveryday ? 1 : 0, startsAt, endsAt, infoUrl || null, notes || null, submittedBy).first();
+    `).bind(title, JSON.stringify(audience), isEveryday ? 1 : 0, startsAt, endsAt, infoUrl || null, locationName || null, mapsUrl || null, notes || null, submittedBy).first();
     return json({ activity: mapActivity(row) }, 201);
   } catch (error) {
     console.error("activity create failed", error);

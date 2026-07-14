@@ -22,6 +22,7 @@
         <div class="nav-links">
           <a class="nav-tab active" href="/" aria-current="page">Planner</a>
           <a class="nav-tab" href="/weather.html">Weather</a>
+          <a class="nav-tab" href="/locations.html">Locations</a>
           <a class="nav-tab" href="/chat.html">Chat</a>
           <a class="nav-claim" href="#days">Claim a day</a>
           <a class="button button-small button-light" href="#add-idea">Add an idea</a>
@@ -175,6 +176,16 @@
             <div class="field full">
               <label for="info-url">Link for more information <span>optional</span></label>
               <input id="info-url" name="infoUrl" type="url" maxlength="500" placeholder="https://…" />
+            </div>
+            <div class="field">
+              <label for="location-name">Location or address <span>optional</span></label>
+              <input id="location-name" name="locationName" type="text" maxlength="200" placeholder="e.g. 1 Thacher Park Road, Voorheesville, NY" />
+              <span class="field-help">Used to include this activity on the locations map.</span>
+            </div>
+            <div class="field">
+              <label for="maps-url">Google Maps link <span>optional</span></label>
+              <input id="maps-url" name="mapsUrl" type="url" maxlength="500" placeholder="https://maps.app.goo.gl/…" />
+              <span class="field-help">Paste the link from Google Maps’ Share button.</span>
             </div>
             <div class="field full">
               <label for="notes">Notes <span>optional</span></label>

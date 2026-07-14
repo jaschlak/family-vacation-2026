@@ -4,6 +4,7 @@ A small family planning site for July 18–25, 2026. Relatives can:
 
 - Claim one of the eight vacation days for their family to lead.
 - Add activity and location ideas with an audience, scheduled time or everyday availability, link, notes, and contributor name.
+- Save a place/address and Google Maps Share link for an activity, then review all saved destinations on the Locations page.
 - Filter ideas for everyone, adults, seniors, teens, kids, or little kids.
 - Vote for ideas without creating an account.
 - Use a shared group chat and discuss individual activity ideas.

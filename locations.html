@@ -4,13 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#173c35" />
-    <meta name="description" content="Daily weather forecast for our July 18–25, 2026 family vacation in Hoosick Falls." />
-    <title>Weather · Our Week Away</title>
+    <meta name="description" content="Google Maps links for our family vacation activities near Hoosick Falls." />
+    <title>Locations · Our Week Away</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/styles.css" />
-    <script src="/weather-page.js" type="module"></script>
+    <script src="/locations.js" type="module"></script>
   </head>
   <body>
     <header class="page-hero">
@@ -21,32 +21,36 @@
         </a>
         <div class="nav-links">
           <a class="nav-tab" href="/">Planner</a>
-          <a class="nav-tab active" href="/weather.html" aria-current="page">Weather</a>
-          <a class="nav-tab" href="/locations.html">Locations</a>
+          <a class="nav-tab" href="/weather.html">Weather</a>
+          <a class="nav-tab active" href="/locations.html" aria-current="page">Locations</a>
           <a class="nav-tab" href="/chat.html">Chat</a>
           <a class="button button-small button-light" href="/#add-idea">Add an idea</a>
         </div>
       </nav>
       <div class="page-hero-content shell">
-        <p class="eyebrow">Hoosick Falls weather</p>
-        <h1>Forecast for<br /><em>our week away.</em></h1>
-        <p>Each date updates automatically as it enters the National Weather Service forecast window.</p>
+        <p class="eyebrow">Places we might go</p>
+        <h1>Every adventure<br /><em>on the map.</em></h1>
+        <p>Open one destination or build a Google Maps route from our home base in Hoosick Falls.</p>
       </div>
     </header>
 
-    <main class="weather-page">
+    <main class="locations-page">
       <section class="shell">
-        <div class="weather-grid" id="weather-grid" aria-live="polite">
-          <div class="loading-card">Loading the daily forecast…</div>
+        <div class="locations-toolbar">
+          <div><p class="eyebrow dark">Trip map</p><h2>Saved locations</h2><p id="locations-count">Loading locations…</p></div>
+          <div class="route-actions" id="route-actions"></div>
         </div>
-        <p class="weather-source">Forecast provided by the <a href="https://forecast.weather.gov/MapClick.php?lat=42.9009&amp;lon=-73.35" target="_blank" rel="noopener noreferrer">National Weather Service ↗</a></p>
+        <p class="route-note" id="route-note" hidden></p>
+        <div class="locations-grid" id="locations-grid" aria-live="polite">
+          <div class="loading-card">Gathering the places on our idea board…</div>
+        </div>
       </section>
     </main>
 
     <footer>
       <div class="shell footer-inner">
         <div><span class="brand-mark">✦</span><strong>Our Week Away</strong></div>
-        <p>July 18–25, 2026 · Hoosick Falls, New York</p>
+        <p>Home base · Hoosick Falls, New York</p>
       </div>
     </footer>
   </body>

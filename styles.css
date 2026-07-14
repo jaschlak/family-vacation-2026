@@ -147,6 +147,11 @@ h1 em { color: var(--gold); font-weight: 600; }
 .discussion-button:hover { color: white; border-color: var(--forest-2); background: var(--forest-2); }
 .discussion-button strong { margin-left: 2px; }
 .discussion-button.compact { display: inline-block; margin: 7px 0 0 4px; padding: 3px 7px; font-size: 10px; }
+.map-link { display: inline-flex; align-items: center; gap: 5px; color: var(--forest-2); font-size: 12px; font-weight: 700; text-decoration: none; }
+.map-link:hover { text-decoration: underline; }
+.map-link span { color: var(--coral); font-size: 15px; }
+.map-link.compact { margin-top: 7px; margin-right: 3px; font-size: 10px; }
+.map-link.compact span { font-size: 12px; }
 .empty-state { padding: 65px 20px; text-align: center; color: rgba(255,255,255,.7); }
 .empty-state span { font-size: 40px; color: var(--gold); }
 .empty-state h3 { margin: 12px 0 6px; color: white; font-size: 28px; }
@@ -246,6 +251,27 @@ h1 em { color: var(--gold); font-weight: 600; }
 .chat-status { min-height: 18px; margin: 10px 0 0; color: var(--forest-2); font-size: 11px; }
 .chat-status.error { color: #8b3f32; }
 
+.locations-page { min-height: 520px; padding-block: 75px 100px; background: #e9dfce; }
+.locations-toolbar { display: flex; align-items: flex-end; justify-content: space-between; gap: 30px; margin-bottom: 22px; }
+.locations-toolbar .eyebrow { margin-bottom: 8px; }
+.locations-toolbar h2 { margin: 0 0 7px; color: var(--forest); font-size: 44px; }
+.locations-toolbar p:last-child { margin: 0; color: var(--muted); font-size: 13px; }
+.route-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.route-note { margin: 0 0 22px; border-left: 3px solid var(--gold); padding: 9px 12px; color: var(--muted); background: rgba(255,255,255,.42); font-size: 11px; }
+.locations-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.location-card { display: grid; grid-template-columns: 44px 1fr; gap: 15px; min-width: 0; border-radius: 8px; padding: 24px; background: var(--paper); box-shadow: 0 8px 25px rgba(18,48,42,.08); }
+.location-pin { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; color: white; background: var(--coral); font-size: 24px; }
+.location-availability { margin: 0 0 4px; color: var(--coral); font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.location-card h2 { margin: 0 0 7px; color: var(--forest); font-size: 23px; line-height: 1.18; }
+.location-address { margin: 0; color: var(--ink); font-size: 13px; overflow-wrap: anywhere; }
+.location-contributor { margin: 5px 0 0; color: var(--muted); font-size: 10px; }
+.location-links { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 14px; }
+.location-links a { color: var(--forest-2); font-size: 11px; font-weight: 700; }
+.locations-empty { grid-column: 1/-1; padding: 70px 20px; text-align: center; color: var(--muted); }
+.locations-empty > span { color: var(--coral); font-size: 45px; }
+.locations-empty h2 { margin: 8px 0; color: var(--forest); font-size: 32px; }
+.locations-empty p { margin: 0 auto 20px; }
+
 .form-section { padding-block: 115px; background: #e9dfce; }
 .form-layout { display: grid; grid-template-columns: .7fr 1.3fr; gap: 90px; align-items: start; }
 .form-intro { position: sticky; top: 40px; }
@@ -307,6 +333,7 @@ dialog::backdrop { background: rgba(11,31,27,.72); backdrop-filter: blur(4px); }
   .split-heading, .form-layout { grid-template-columns: 1fr; gap: 25px; }
   .day-grid { grid-template-columns: repeat(2, 1fr); }
   .weather-grid { grid-template-columns: repeat(2, 1fr); }
+  .locations-grid { grid-template-columns: 1fr; }
   .form-intro { position: static; }
   .form-doodle { display: none; }
   .idea-card { grid-template-columns: 85px 1fr; }
@@ -316,8 +343,10 @@ dialog::backdrop { background: rgba(11,31,27,.72); backdrop-filter: blur(4px); }
 @media (max-width: 560px) {
   .shell { width: min(100% - 28px, 1160px); }
   .nav { height: 72px; }
-  .nav-links { gap: 14px; }
+  .brand > span:last-child { display: none; }
+  .nav-links { gap: 12px; }
   .nav-links .nav-claim, .nav-links .nav-tab.active { display: none; }
+  .nav-links .button { display: none; }
   .hero { min-height: 665px; }
   .hero-content { padding-top: 90px; }
   h1 { font-size: 54px; }
@@ -326,6 +355,11 @@ dialog::backdrop { background: rgba(11,31,27,.72); backdrop-filter: blur(4px); }
   .day-grid { grid-template-columns: 1fr 1fr; }
   .weather-grid { grid-template-columns: 1fr 1fr; }
   .weather-card { min-height: 165px; padding: 16px; }
+  .locations-toolbar { align-items: stretch; flex-direction: column; }
+  .route-actions { justify-content: stretch; }
+  .route-actions .button { width: 100%; }
+  .location-card { grid-template-columns: 36px 1fr; padding: 20px; }
+  .location-pin { width: 36px; height: 36px; font-size: 19px; }
   .day-card { min-height: 205px; padding: 18px; }
   .day-number { font-size: 44px; }
   .day-status { padding: 4px 7px; font-size: 8px; }

@@ -35,6 +35,8 @@ export function mapActivity(row) {
     startsAt: row.starts_at,
     endsAt: row.ends_at,
     infoUrl: row.info_url,
+    locationName: row.location_name,
+    mapsUrl: row.maps_url,
     notes: row.notes,
     submittedBy: row.submitted_by,
     createdAt: row.created_at

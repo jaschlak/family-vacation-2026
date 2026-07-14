@@ -204,6 +204,8 @@ createServer(async (request, response) => {
         startsAt: isEveryday ? "2026-07-18T00:00" : input.startsAt,
         endsAt: isEveryday ? "2026-07-25T23:59" : input.endsAt,
         infoUrl: input.infoUrl?.trim().slice(0, 500) || null,
+        locationName: input.locationName?.trim().slice(0, 200) || null,
+        mapsUrl: input.mapsUrl?.trim().slice(0, 500) || null,
         notes: input.notes?.trim().slice(0, 2000) || null,
         submittedBy: input.submittedBy.trim().slice(0, 80), createdAt: new Date().toISOString()
       };

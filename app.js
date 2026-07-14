@@ -67,6 +67,19 @@ function discussionButton(idea, compact = false) {
   </button>`;
 }
 
+function mapLink(idea, compact = false) {
+  const location = String(idea.locationName || "").trim();
+  const sharedUrl = String(idea.mapsUrl || "").trim();
+  const url = /^https:\/\//i.test(sharedUrl)
+    ? sharedUrl
+    : location
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`
+      : "";
+  if (!url) return "";
+  const label = compact ? "Map" : location || "Open in Google Maps";
+  return `<a class="map-link ${compact ? "compact" : ""}" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">⌖</span>${escapeHtml(label)}</a>`;
+}
+
 function eventDescription(idea, safeUrl, wordLimit = 40, compact = false) {
   const notes = String(idea.notes || "").trim();
   const words = notes ? notes.split(/\s+/) : [];
@@ -166,6 +179,7 @@ function renderIdeas() {
         </div>
         <div class="idea-main">
           <h3>${escapeHtml(idea.title)}</h3>
+          ${mapLink(idea)}
           <div class="idea-meta">
             ${idea.audience.map((group) => `<span class="tag">${escapeHtml(group)}</span>`).join("")}
             <span class="tag submitted">Added by ${escapeHtml(idea.submittedBy)}</span>
@@ -277,7 +291,7 @@ function renderTimeline() {
     <div class="timeline-everyday-list">
       ${everydayIdeas.map((idea) => {
         const safeUrl = idea.infoUrl && /^https?:\/\//i.test(idea.infoUrl) ? escapeHtml(idea.infoUrl) : "";
-        return `<span class="timeline-everyday-item">${escapeHtml(idea.title)}${safeUrl ? ` · <a href="${safeUrl}" target="_blank" rel="noopener noreferrer">info</a>` : ""} ${voteButton(idea, true)} ${discussionButton(idea, true)}</span>`;
+        return `<span class="timeline-everyday-item">${escapeHtml(idea.title)}${safeUrl ? ` · <a href="${safeUrl}" target="_blank" rel="noopener noreferrer">info</a>` : ""} ${mapLink(idea, true)} ${voteButton(idea, true)} ${discussionButton(idea, true)}</span>`;
       }).join("")}
     </div>`;
 
@@ -317,6 +331,7 @@ function renderTimeline() {
         return `<article class="timeline-choice">
           <h4>${escapeHtml(idea.title)}</h4>
           <p>${rangeLabel(idea.startsAt, idea.endsAt)}</p>
+          ${mapLink(idea, true)}
           ${voteButton(idea, true)}
           ${discussionButton(idea, true)}
           ${eventDescription(idea, safeUrl, 22, true)}
@@ -339,6 +354,7 @@ function renderTimeline() {
           <article class="timeline-event tone-${index % 3 + 1}" style="grid-column:${idea.lane + 1}">
             <h4>${escapeHtml(idea.title)}</h4>
             <p class="timeline-event-time">${rangeLabel(idea.startsAt, idea.endsAt)}</p>
+            ${mapLink(idea, true)}
             ${voteButton(idea, true)}
             ${discussionButton(idea, true)}
             ${eventDescription(idea, safeUrl, 18, true)}
@@ -479,7 +495,8 @@ ideaForm.addEventListener("submit", async (event) => {
       method: "POST",
       body: JSON.stringify({
         title: form.get("title"), audience, isEveryday, startsAt: form.get("startsAt"), endsAt: form.get("endsAt"),
-        infoUrl: form.get("infoUrl"), notes: form.get("notes"), submittedBy: form.get("submittedBy"), website: form.get("website")
+        infoUrl: form.get("infoUrl"), locationName: form.get("locationName"), mapsUrl: form.get("mapsUrl"),
+        notes: form.get("notes"), submittedBy: form.get("submittedBy"), website: form.get("website")
       })
     });
     state.activities.push(result.activity);
