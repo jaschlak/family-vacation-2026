@@ -41,7 +41,9 @@ button { color: inherit; }
 h1, h2, h3 { font-family: "Fraunces", serif; margin-top: 0; letter-spacing: -.035em; line-height: 1.02; }
 h1 { max-width: 760px; margin-bottom: 24px; font-size: clamp(55px, 8vw, 104px); }
 h1 em { color: var(--gold); font-weight: 600; }
-.hero-copy { max-width: 500px; margin: 0 0 36px; color: rgba(255,255,255,.78); font-size: 18px; }
+.hero-copy { max-width: 500px; margin: 0 0 24px; color: rgba(255,255,255,.78); font-size: 18px; }
+.home-base { display: flex; align-items: center; gap: 10px; width: fit-content; margin: 0 0 24px; color: white; font-size: 14px; font-weight: 600; }
+.home-base span { border: 1px solid rgba(255,255,255,.28); border-radius: 999px; padding: 4px 9px; color: var(--gold); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; }
 .date-lockup { display: flex; align-items: center; gap: 13px; width: fit-content; color: var(--gold); }
 .date-lockup span { font-size: 11px; letter-spacing: .18em; font-weight: 700; }
 .date-lockup strong { color: white; font-family: "Fraunces", serif; font-size: 30px; }
