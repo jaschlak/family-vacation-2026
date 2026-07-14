@@ -55,6 +55,28 @@ function voteButton(idea, compact = false) {
   </button>`;
 }
 
+function eventDescription(idea, safeUrl, wordLimit = 40, compact = false) {
+  const notes = String(idea.notes || "").trim();
+  const words = notes ? notes.split(/\s+/) : [];
+  const link = safeUrl ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">More information ↗</a>` : "";
+  const compactClass = compact ? " compact" : "";
+
+  if (!notes) return link ? `<div class="event-description${compactClass}">${link}</div>` : "";
+  if (words.length <= wordLimit) {
+    return `<div class="event-description${compactClass}"><p>${escapeHtml(notes)}</p>${link}</div>`;
+  }
+
+  const preview = `${words.slice(0, wordLimit).join(" ")}…`;
+  return `
+    <details class="event-description expandable${compactClass}">
+      <summary>
+        <span class="description-preview">${escapeHtml(preview)} <strong>Show more</strong></span>
+        <span class="description-expanded">Hide details</span>
+      </summary>
+      <div class="description-full"><p>${escapeHtml(notes)}</p>${link}</div>
+    </details>`;
+}
+
 function tripDate(value) {
   const [year, month, day] = value.slice(0, 10).split("-").map(Number);
   return new Date(year, month - 1, day);
@@ -100,8 +122,6 @@ function renderDays() {
         ` : `
           <button class="claim-button" type="button" data-claim-date="${day.date}">Claim this day →</button>
         `}
-        <a class="weather-link" href="/weather.html#weather-${day.date}"
-          aria-label="Weather forecast for ${date.weekday}, July ${date.day} in Hoosick Falls">Weather for ${date.shortWeekday} ↗</a>
       </article>`;
   }).join("");
 }
@@ -117,14 +137,7 @@ function renderIdeas() {
   ideaList.innerHTML = visible.map((idea) => {
     const date = idea.isEveryday ? null : dateParts(idea.startsAt);
     const safeUrl = idea.infoUrl && /^https?:\/\//i.test(idea.infoUrl) ? escapeHtml(idea.infoUrl) : "";
-    const details = idea.notes || safeUrl ? `
-      <details class="idea-details">
-        <summary>Event details</summary>
-        <div class="idea-details-content">
-          ${idea.notes ? `<p>${escapeHtml(idea.notes)}</p>` : ""}
-          ${safeUrl ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">More information ↗</a>` : ""}
-        </div>
-      </details>` : "";
+    const details = eventDescription(idea, safeUrl);
     const availability = idea.isEveryday ? `
       <span>Available</span>
       <strong class="everyday-mark">Every day</strong>
@@ -225,7 +238,6 @@ function renderTimeline() {
   const dayIdeas = ideasForDay(state.timelineDate);
   const everydayIdeas = state.activities.filter((idea) => idea.isEveryday);
   document.querySelector("#timeline-title").textContent = `${selectedDate.weekday}, July ${selectedDate.day}`;
-  document.querySelector("#timeline-weather-link").href = `/weather.html#weather-${state.timelineDate}`;
   const scheduledLabel = `${dayIdeas.length} scheduled`;
   const everydayLabel = `${everydayIdeas.length} everyday`;
   document.querySelector("#timeline-count").textContent = everydayIdeas.length ? `${scheduledLabel} · ${everydayLabel}` : scheduledLabel;
@@ -270,7 +282,7 @@ function renderTimeline() {
           <h4>${escapeHtml(idea.title)}</h4>
           <p>${rangeLabel(idea.startsAt, idea.endsAt)}</p>
           ${voteButton(idea, true)}
-          ${idea.notes || safeUrl ? `<details class="timeline-choice-details"><summary>Event details</summary><div>${idea.notes ? `<p>${escapeHtml(idea.notes)}</p>` : ""}${safeUrl ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">More information ↗</a>` : ""}</div></details>` : ""}
+          ${eventDescription(idea, safeUrl, 22, true)}
         </article>`;
       }).join("")}
     </div>`;
@@ -291,7 +303,7 @@ function renderTimeline() {
             <h4>${escapeHtml(idea.title)}</h4>
             <p class="timeline-event-time">${rangeLabel(idea.startsAt, idea.endsAt)}</p>
             ${voteButton(idea, true)}
-            ${idea.notes || safeUrl ? `<details class="timeline-event-details"><summary>Details</summary><div>${idea.notes ? `<p class="timeline-event-notes">${escapeHtml(idea.notes)}</p>` : ""}${safeUrl ? `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">More information ↗</a>` : ""}</div></details>` : ""}
+            ${eventDescription(idea, safeUrl, 18, true)}
           </article>
         </div>`;
       }).join("")}
