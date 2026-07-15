@@ -6,6 +6,7 @@ A small family planning site for July 18–25, 2026. Relatives can:
 - Add activity and location ideas with an audience, scheduled time or everyday availability, link, notes, and contributor name.
 - Save a place/address and Google Maps Share link for an activity, then review all saved destinations on the Locations page.
 - Add, change, or remove an existing activity’s location from its card on the public idea board.
+- Filter the Locations page by trip day or highest vote total and view the matching places in an embedded Google Map.
 - Filter ideas for everyone, adults, seniors, teens, kids, or little kids.
 - Vote for ideas without creating an account.
 - Use a shared group chat and discuss individual activity ideas.
@@ -52,6 +53,21 @@ Open <http://localhost:8788>. Local claims and ideas are written to `.data/local
    ```
 
 6. Push to GitHub. Cloudflare Pages will deploy automatically and provide a free `pages.dev` address.
+
+## Google Maps view
+
+The Locations page uses the Google Maps Embed API. Google currently provides this API without usage charges, but requires a Google Cloud project, billing profile, and API key.
+
+1. In Google Cloud, enable **Maps Embed API** and create an API key.
+2. Restrict the key to **Websites** and add these allowed referrers:
+
+   - `https://family-vacation-2026.pages.dev/*`
+   - `https://*.family-vacation-2026.pages.dev/*`
+
+3. Restrict the key’s API access to **Maps Embed API** only.
+4. In the Cloudflare Pages project, add an encrypted environment variable named `GOOGLE_MAPS_EMBED_KEY` for Production and Preview, then redeploy.
+
+The browser must receive the key to load Google’s iframe, so domain and API restrictions are essential. Never commit the key to `wrangler.toml`, JavaScript, or Git.
 
 The migrations create the eight trip days and add Terri’s three sightseeing ideas without duplicating them.
 

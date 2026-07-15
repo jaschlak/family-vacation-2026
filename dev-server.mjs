@@ -95,6 +95,11 @@ createServer(async (request, response) => {
   try {
     if (url.pathname === "/api/trip" && request.method === "GET") return sendJson(response, tripPayload(await loadData()));
 
+    if (url.pathname === "/api/map-config" && request.method === "GET") {
+      const apiKey = typeof process.env.GOOGLE_MAPS_EMBED_KEY === "string" ? process.env.GOOGLE_MAPS_EMBED_KEY.trim() : "";
+      return sendJson(response, { configured: Boolean(apiKey), apiKey: apiKey || null });
+    }
+
     if (url.pathname === "/api/messages" && request.method === "GET") {
       const rawActivityId = url.searchParams.get("activityId");
       const activityId = rawActivityId === null || rawActivityId === "" ? null : Number(rawActivityId);

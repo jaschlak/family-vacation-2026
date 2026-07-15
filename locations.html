@@ -36,6 +36,25 @@
 
     <main class="locations-page">
       <section class="shell">
+        <div class="locations-map-panel">
+          <div class="locations-map-heading">
+            <div><p class="eyebrow dark">Google Maps view</p><h2>See the possibilities</h2></div>
+            <p id="map-count">Loading the map…</p>
+          </div>
+          <div class="location-filter-group">
+            <span>Day</span>
+            <div class="location-day-filters" id="location-day-filters" aria-label="Filter locations by day"></div>
+          </div>
+          <div class="location-filter-group">
+            <span>Votes</span>
+            <button class="location-filter" id="most-voted-filter" type="button" aria-pressed="false">Most voted only</button>
+          </div>
+          <div class="google-map-wrap" id="google-map-wrap">
+            <iframe id="google-map" title="Google map of filtered vacation locations" loading="lazy" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" hidden></iframe>
+            <div class="google-map-message" id="google-map-message">Preparing Google Maps…</div>
+          </div>
+        </div>
+
         <div class="locations-toolbar">
           <div><p class="eyebrow dark">Trip map</p><h2>Saved locations</h2><p id="locations-count">Loading locations…</p></div>
           <div class="route-actions" id="route-actions"></div>
