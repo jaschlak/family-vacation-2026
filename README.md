@@ -56,18 +56,18 @@ Open <http://localhost:8788>. Local claims and ideas are written to `.data/local
 
 ## Google Maps view
 
-The Locations page uses the Google Maps Embed API. Google currently provides this API without usage charges, but requires a Google Cloud project, billing profile, and API key.
+The Locations page uses the Google Maps JavaScript API and Geocoding API to show interactive pins and connect each location card to its marker. It requires a Google Cloud project, billing profile, and API key.
 
-1. In Google Cloud, enable **Maps Embed API** and create an API key.
+1. In Google Cloud, enable **Maps JavaScript API** and **Geocoding API**. You can keep using the existing Maps key.
 2. Restrict the key to **Websites** and add these allowed referrers:
 
    - `https://family-vacation-2026.pages.dev/*`
    - `https://*.family-vacation-2026.pages.dev/*`
 
-3. Restrict the key’s API access to **Maps Embed API** only.
+3. Restrict the key’s API access to **Maps JavaScript API** and **Geocoding API**. You can remove **Maps Embed API** after this version is deployed because the site no longer uses an iframe map.
 4. In the Cloudflare Pages project, add an encrypted environment variable named `GOOGLE_MAPS_EMBED_KEY` for Production and Preview, then redeploy.
 
-The browser must receive the key to load Google’s iframe, so domain and API restrictions are essential. Never commit the key to `wrangler.toml`, JavaScript, or Git.
+The browser must receive the key to load the interactive map, so domain and API restrictions are essential. Never commit the key to `wrangler.toml`, JavaScript, or Git.
 
 The migrations create the eight trip days and add Terri’s three sightseeing ideas without duplicating them.
 

@@ -30,7 +30,7 @@
       <div class="page-hero-content shell">
         <p class="eyebrow">Places we might go</p>
         <h1>Every adventure<br /><em>on the map.</em></h1>
-        <p>Open one destination or build a Google Maps route from our home base in Hoosick Falls.</p>
+        <p>See every destination at once, then get directions from our home base in Hoosick Falls.</p>
       </div>
     </header>
 
@@ -50,7 +50,7 @@
             <button class="location-filter" id="most-voted-filter" type="button" aria-pressed="false">Most voted only</button>
           </div>
           <div class="google-map-wrap" id="google-map-wrap">
-            <iframe id="google-map" title="Google map of filtered vacation locations" loading="lazy" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" hidden></iframe>
+            <div id="google-map" role="application" aria-label="Interactive Google map of filtered vacation locations" hidden></div>
             <div class="google-map-message" id="google-map-message">Preparing Google Maps…</div>
           </div>
         </div>
