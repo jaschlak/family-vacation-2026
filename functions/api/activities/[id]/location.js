@@ -1,4 +1,5 @@
 import { clean, json, readJson } from "../../../_lib/http.js";
+import { resolveGoogleMapsLocation } from "../../../_lib/maps.js";
 
 function activityId(value) {
   const id = Number(value);
@@ -27,9 +28,10 @@ export async function onRequestPut({ request, env, params }) {
   if (!id || !body) return json({ error: "Please send valid location details." }, 400);
   if (clean(body.website, 100)) return json({ error: "Unable to update that location." }, 400);
 
-  const locationName = clean(body.locationName, 200);
+  let locationName = clean(body.locationName, 200);
   const mapsUrl = clean(body.mapsUrl, 500);
   if (!validGoogleMapsUrl(mapsUrl)) return json({ error: "The map link needs to be a Google Maps web address." }, 400);
+  if (!locationName && mapsUrl) locationName = await resolveGoogleMapsLocation(mapsUrl);
 
   try {
     const row = await env.DB.prepare(`

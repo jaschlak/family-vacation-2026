@@ -88,6 +88,23 @@ async function bodyJson(request) {
   try { return JSON.parse(raw); } catch { return null; }
 }
 
+function placeNameFromMapsUrl(value) {
+  try {
+    const map = new URL(value);
+    const match = map.pathname.match(/\/maps\/place\/([^/]+)/i);
+    return match ? decodeURIComponent(match[1].replace(/\+/g, " ")).trim().slice(0, 200) : "";
+  } catch { return ""; }
+}
+
+async function resolveMapsLocation(value) {
+  const direct = placeNameFromMapsUrl(value);
+  if (direct || !value) return direct;
+  try {
+    const response = await fetch(value, { redirect: "follow" });
+    return placeNameFromMapsUrl(response.url);
+  } catch { return ""; }
+}
+
 const types = { ".html": "text/html; charset=utf-8", ".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".svg": "image/svg+xml" };
 
 createServer(async (request, response) => {
@@ -178,7 +195,7 @@ createServer(async (request, response) => {
     const locationRoute = url.pathname.match(/^\/api\/activities\/(\d+)\/location$/);
     if (locationRoute && request.method === "PUT") {
       const input = await bodyJson(request);
-      const locationName = typeof input?.locationName === "string" ? input.locationName.trim().slice(0, 200) : "";
+      let locationName = typeof input?.locationName === "string" ? input.locationName.trim().slice(0, 200) : "";
       const mapsUrl = typeof input?.mapsUrl === "string" ? input.mapsUrl.trim().slice(0, 500) : "";
       if (input?.website) return sendJson(response, { error: "Unable to update that location." }, 400);
       if (mapsUrl) {
@@ -190,6 +207,7 @@ createServer(async (request, response) => {
         } catch {
           return sendJson(response, { error: "The map link needs to be a Google Maps web address." }, 400);
         }
+        if (!locationName) locationName = await resolveMapsLocation(mapsUrl);
       }
       const data = await loadData();
       const activity = data.activities.find((item) => item.id === Number(locationRoute[1]));
@@ -228,14 +246,16 @@ createServer(async (request, response) => {
         return sendJson(response, { error: "Add a name, audience, valid time range, and your name." }, 400);
       }
       const data = await loadData();
+      const mapsUrl = input.mapsUrl?.trim().slice(0, 500) || null;
+      const locationName = input.locationName?.trim().slice(0, 200) || (mapsUrl ? await resolveMapsLocation(mapsUrl) : null);
       const activity = {
         id: Math.max(0, ...data.activities.map((item) => item.id)) + 1,
         title: input.title.trim().slice(0, 100), audience, isEveryday, voteCount: 0,
         startsAt: isEveryday ? "2026-07-18T00:00" : input.startsAt,
         endsAt: isEveryday ? "2026-07-25T23:59" : input.endsAt,
         infoUrl: input.infoUrl?.trim().slice(0, 500) || null,
-        locationName: input.locationName?.trim().slice(0, 200) || null,
-        mapsUrl: input.mapsUrl?.trim().slice(0, 500) || null,
+        locationName,
+        mapsUrl,
         notes: input.notes?.trim().slice(0, 2000) || null,
         submittedBy: input.submittedBy.trim().slice(0, 80), createdAt: new Date().toISOString()
       };

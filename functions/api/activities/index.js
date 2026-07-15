@@ -1,4 +1,5 @@
 import { clean, json, mapActivity, readJson } from "../../_lib/http.js";
+import { resolveGoogleMapsLocation } from "../../_lib/maps.js";
 
 const AUDIENCES = new Set(["Everyone", "Adults", "Seniors", "Teens", "Kids", "Little kids"]);
 const DATE_TIME_PATTERN = /^2026-07-(1[89]|2[0-5])T([01]\d|2[0-3]):[0-5]\d$/;
@@ -15,7 +16,7 @@ export async function onRequestPost({ request, env }) {
   const startsAt = isEveryday ? TRIP_START : clean(body.startsAt, 16);
   const endsAt = isEveryday ? TRIP_END : clean(body.endsAt, 16);
   const infoUrl = clean(body.infoUrl, 500);
-  const locationName = clean(body.locationName, 200);
+  let locationName = clean(body.locationName, 200);
   const mapsUrl = clean(body.mapsUrl, 500);
   const notes = clean(body.notes, 2000);
   const submittedBy = clean(body.submittedBy, 80);
@@ -47,6 +48,7 @@ export async function onRequestPost({ request, env }) {
     } catch {
       return json({ error: "The map link needs to be a Google Maps web address." }, 400);
     }
+    if (!locationName) locationName = await resolveGoogleMapsLocation(mapsUrl);
   }
 
   try {
