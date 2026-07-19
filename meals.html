@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#173c35" />
+    <meta name="description" content="Family meal helper and chef signups for our July 18–25, 2026 vacation." />
+    <title>Meals · Our Week Away</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+    <script src="/meals.js" type="module"></script>
+  </head>
+  <body>
+    <header class="page-hero meals-hero">
+      <nav class="nav shell" aria-label="Primary navigation">
+        <a class="brand" href="/" aria-label="Our Week Away home">
+          <span class="brand-mark" aria-hidden="true">✦</span>
+          <span>Our Week Away</span>
+        </a>
+        <div class="nav-links">
+          <a class="nav-tab" href="/">Planner</a>
+          <a class="nav-tab active" href="/meals.html" aria-current="page">Meals</a>
+          <a class="nav-tab" href="/weather.html">Weather</a>
+          <a class="nav-tab" href="/locations.html">Locations</a>
+          <a class="nav-tab" href="/chat.html">Chat</a>
+          <a class="button button-small button-light" href="/#add-idea">Add an idea</a>
+        </div>
+      </nav>
+      <div class="page-hero-content shell">
+        <p class="eyebrow">The family table</p>
+        <h1>Pick a meal.<br /><em>Lend a hand.</em></h1>
+        <p>Every meal serves 12 people. Choose one chef position or help the cooks throughout an entire day.</p>
+      </div>
+    </header>
+
+    <main class="meals-page">
+      <section class="shell">
+        <div class="meal-overview">
+          <div class="meal-progress-card">
+            <p class="eyebrow dark">Signup progress</p>
+            <strong id="meal-progress">Loading…</strong>
+            <div class="meal-progress-track" aria-hidden="true"><span id="meal-progress-bar"></span></div>
+            <p id="meal-progress-note">Gathering the meal schedule.</p>
+          </div>
+          <article class="meal-role-card helper">
+            <span aria-hidden="true">↗</span>
+            <div><h2>Helper for the day</h2><p>Support every cook that day with prep, errands, serving, and cleanup.</p></div>
+          </article>
+          <article class="meal-role-card chef">
+            <span aria-hidden="true">♨</span>
+            <div><h2>Chef for a meal</h2><p>Plan the meal, handle purchasing logistics, and cook with help from that day’s helper.</p></div>
+          </article>
+        </div>
+
+        <div class="meal-schedule-heading">
+          <div><p class="eyebrow dark">July 18–25</p><h2>Meal schedule</h2></div>
+          <p>Mom has breakfast covered every morning. Sunday and Wednesday lunch are eating out.</p>
+        </div>
+        <div class="meal-days" id="meal-days" aria-live="polite">
+          <div class="loading-card">Setting the table…</div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="shell footer-inner">
+        <div><span class="brand-mark">✦</span><strong>Our Week Away</strong></div>
+        <p>Home base · 202 Rogers Avenue, Hoosick Falls, NY 12090</p>
+      </div>
+    </footer>
+
+    <dialog id="meal-dialog">
+      <form class="dialog-card meal-signup-form" id="meal-form">
+        <button class="dialog-close" id="meal-close" type="button" aria-label="Close">×</button>
+        <p class="eyebrow coral" id="meal-dialog-eyebrow">Meal signup</p>
+        <h2 id="meal-dialog-title">Choose this position</h2>
+        <p id="meal-dialog-description"></p>
+        <input id="meal-date" name="date" type="hidden" />
+        <input id="meal-slot" name="slot" type="hidden" />
+        <div class="field">
+          <label for="meal-name">Who is taking this position?</label>
+          <input id="meal-name" name="assignedTo" maxlength="80" autocomplete="name" required />
+        </div>
+        <div id="meal-chef-details">
+          <div class="field">
+            <label for="meal-dish">What are you cooking? <span>optional</span></label>
+            <input id="meal-dish" name="dishName" maxlength="120" placeholder="e.g. Chicken tacos with rice and beans" />
+          </div>
+          <div class="field">
+            <label for="meal-ingredients">Ingredients <span>optional</span></label>
+            <textarea id="meal-ingredients" name="ingredients" maxlength="3000" rows="6" placeholder="List ingredients and quantities for 12 people…"></textarea>
+          </div>
+          <div class="field">
+            <label for="meal-instructions">Cooking instructions <span>optional</span></label>
+            <textarea id="meal-instructions" name="instructions" maxlength="5000" rows="7" placeholder="Preparation and cooking steps…"></textarea>
+          </div>
+        </div>
+        <div class="honeypot" aria-hidden="true">
+          <label for="meal-website">Website</label><input id="meal-website" name="website" tabindex="-1" autocomplete="off" />
+        </div>
+        <p class="location-edit-note">Anyone with the family site link can update or release a meal position.</p>
+        <div class="meal-dialog-actions">
+          <button class="meal-release" id="meal-release" type="button" hidden>Release position</button>
+          <button class="button button-primary" id="meal-submit" type="submit">Save signup</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>

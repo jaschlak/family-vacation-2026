@@ -298,6 +298,63 @@ h1 em { color: var(--gold); font-weight: 600; }
 .locations-empty h2 { margin: 8px 0; color: var(--forest); font-size: 32px; }
 .locations-empty p { margin: 0 auto 20px; }
 
+.meals-page { min-height: 600px; padding-block: 72px 100px; background: #e9dfce; }
+.meal-overview { display: grid; grid-template-columns: 1.05fr 1fr 1fr; gap: 14px; margin-bottom: 65px; }
+.meal-progress-card, .meal-role-card { min-height: 190px; border-radius: 9px; padding: 27px; box-shadow: 0 10px 30px rgba(18,48,42,.09); }
+.meal-progress-card { color: white; background: var(--forest); }
+.meal-progress-card .eyebrow { color: var(--gold); }
+.meal-progress-card > strong { display: block; margin: 12px 0 17px; font-family: "Fraunces", serif; font-size: 28px; line-height: 1.15; }
+.meal-progress-card > p:last-child { margin: 10px 0 0; color: rgba(255,255,255,.68); font-size: 11px; }
+.meal-progress-track { height: 7px; overflow: hidden; border-radius: 99px; background: rgba(255,255,255,.14); }
+.meal-progress-track span { display: block; width: 0; height: 100%; border-radius: inherit; background: var(--gold); transition: width .25s ease; }
+.meal-role-card { display: flex; align-items: flex-start; gap: 18px; background: var(--paper); }
+.meal-role-card > span { display: grid; flex: 0 0 43px; place-items: center; width: 43px; height: 43px; border-radius: 50%; color: white; background: var(--coral); font-size: 22px; }
+.meal-role-card.chef > span { color: var(--forest); background: var(--gold); }
+.meal-role-card h2 { margin: 3px 0 8px; color: var(--forest); font-size: 23px; line-height: 1.1; }
+.meal-role-card p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+.meal-schedule-heading { display: flex; align-items: end; justify-content: space-between; gap: 30px; margin-bottom: 25px; }
+.meal-schedule-heading .eyebrow { margin-bottom: 8px; }
+.meal-schedule-heading h2 { margin: 0; color: var(--forest); font-size: 48px; }
+.meal-schedule-heading > p { max-width: 470px; margin: 0 0 5px; color: var(--muted); font-size: 12px; line-height: 1.6; text-align: right; }
+.meal-days { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; }
+.meal-day-card { overflow: hidden; border-radius: 9px; background: var(--paper); box-shadow: 0 10px 28px rgba(18,48,42,.08); }
+.meal-day-card > header { display: flex; align-items: center; gap: 16px; padding: 20px 23px 17px; color: white; background: var(--forest); }
+.meal-day-card > header > div { min-width: 50px; border-right: 1px solid rgba(255,255,255,.18); padding-right: 16px; text-align: center; }
+.meal-day-card > header span { display: block; color: var(--gold); font-size: 9px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.meal-day-card > header strong { display: block; font-family: "Fraunces", serif; font-size: 31px; line-height: 1; }
+.meal-day-card > header h3 { margin: 0; font-size: 21px; }
+.meal-day-card > header h3 small { display: block; margin-top: 2px; color: rgba(255,255,255,.55); font-family: "DM Sans", sans-serif; font-size: 10px; font-weight: 600; }
+.meal-helper { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin: 16px 18px 0; border: 1px solid #e1c36e; border-radius: 7px; padding: 13px 15px; background: #fbf3d9; }
+.meal-helper.claimed { border-color: #a9c9b1; background: #e5f0e7; }
+.meal-helper span, .meal-slot > span { display: block; color: var(--coral); font-size: 8px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.meal-helper strong { display: block; margin: 2px 0; color: var(--forest); font-family: "Fraunces", serif; font-size: 18px; }
+.meal-helper small { display: block; color: var(--muted); font-size: 9px; }
+.meal-helper button, .meal-slot button { flex: 0 0 auto; border: 1px solid var(--forest-2); border-radius: 999px; padding: 7px 10px; color: var(--forest-2); background: white; cursor: pointer; font-size: 9px; font-weight: 700; }
+.meal-helper button:hover, .meal-slot button:hover { color: white; background: var(--forest-2); }
+.meal-slots { display: grid; grid-template-columns: repeat(3, 1fr); padding: 14px 18px 19px; }
+.meal-slot { min-width: 0; border-right: 1px solid var(--line); padding: 10px 13px; }
+.meal-slot:first-child { padding-left: 0; }
+.meal-slot:last-child { border-right: 0; padding-right: 0; }
+.meal-slot > strong { display: block; margin: 6px 0 4px; overflow-wrap: anywhere; color: var(--forest); font-family: "Fraunces", serif; font-size: 17px; line-height: 1.15; }
+.meal-slot > small { display: block; min-height: 27px; color: var(--muted); font-size: 9px; line-height: 1.35; }
+.meal-slot button { margin-top: 9px; }
+.meal-slot.fixed > span, .meal-slot.fixed > strong { color: var(--forest-2); }
+.meal-slot.eating-out > span, .meal-slot.eating-out > strong { color: #8b422f; }
+.meal-recipe { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; }
+.meal-recipe summary { color: var(--forest-2); cursor: pointer; font-size: 9px; font-weight: 700; line-height: 1.35; }
+.meal-recipe > div { padding-top: 9px; }
+.meal-recipe > div strong { display: block; margin-top: 8px; color: var(--forest); font-size: 9px; text-transform: uppercase; }
+.meal-recipe > div strong:first-child { margin-top: 0; }
+.meal-recipe p { margin: 3px 0 0; color: var(--muted); font-size: 9px; line-height: 1.45; overflow-wrap: anywhere; white-space: pre-line; }
+.meal-signup-form { max-height: min(760px, calc(100vh - 30px)); overflow-y: auto; }
+.meal-signup-form h2 { margin-bottom: 9px; font-size: 34px; line-height: 1.15; }
+#meal-chef-details[hidden] { display: none; }
+.meal-dialog-actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.meal-dialog-actions .button { margin-left: auto; }
+.meal-release { border: 0; padding: 8px 0; color: #a43f35; background: transparent; cursor: pointer; font-size: 11px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.meal-release[hidden] { display: none; }
+.meal-release:disabled { cursor: wait; opacity: .55; }
+
 .form-section { padding-block: 115px; background: #e9dfce; }
 .form-layout { display: grid; grid-template-columns: .7fr 1.3fr; gap: 90px; align-items: start; }
 .form-intro { position: sticky; top: 40px; }
@@ -366,6 +423,9 @@ dialog::backdrop { background: rgba(11,31,27,.72); backdrop-filter: blur(4px); }
   .day-grid { grid-template-columns: repeat(2, 1fr); }
   .weather-grid { grid-template-columns: repeat(2, 1fr); }
   .locations-grid { grid-template-columns: 1fr; }
+  .meal-overview { grid-template-columns: 1fr 1fr; }
+  .meal-progress-card { grid-column: 1/-1; }
+  .meal-days { grid-template-columns: 1fr; }
   .form-intro { position: static; }
   .form-doodle { display: none; }
   .idea-card { grid-template-columns: 85px 1fr; }
@@ -398,6 +458,20 @@ dialog::backdrop { background: rgba(11,31,27,.72); backdrop-filter: blur(4px); }
   .route-actions .button { width: 100%; }
   .location-card { grid-template-columns: 36px 1fr; padding: 20px; }
   .location-pin { width: 36px; height: 36px; font-size: 19px; }
+  .meals-page { padding-block: 50px 75px; }
+  .meal-overview { grid-template-columns: 1fr; margin-bottom: 48px; }
+  .meal-progress-card { grid-column: auto; }
+  .meal-progress-card, .meal-role-card { min-height: 0; padding: 22px; }
+  .meal-schedule-heading { align-items: flex-start; flex-direction: column; gap: 7px; }
+  .meal-schedule-heading h2 { font-size: 39px; }
+  .meal-schedule-heading > p { text-align: left; }
+  .meal-helper { align-items: flex-start; }
+  .meal-slots { grid-template-columns: 1fr; }
+  .meal-slot, .meal-slot:first-child, .meal-slot:last-child { border-right: 0; border-bottom: 1px solid var(--line); padding: 15px 0; }
+  .meal-slot:last-child { border-bottom: 0; }
+  .meal-slot > small { min-height: 0; }
+  .meal-dialog-actions { align-items: stretch; flex-direction: column-reverse; }
+  .meal-dialog-actions .button { width: 100%; margin-left: 0; }
   .day-card { min-height: 205px; padding: 18px; }
   .day-number { font-size: 44px; }
   .day-status { padding: 4px 7px; font-size: 8px; }

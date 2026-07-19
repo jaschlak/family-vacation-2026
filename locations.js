@@ -1,4 +1,4 @@
-const HOME_BASE = "Hoosick Falls, New York";
+const HOME_BASE = "202 Rogers Avenue, Hoosick Falls, NY 12090";
 const HOME_BASE_CENTER = { lat: 42.9001, lng: -73.3515 };
 const TRIP_DATES = Array.from({ length: 8 }, (_, index) => `2026-07-${String(18 + index).padStart(2, "0")}`);
 const state = {
@@ -154,7 +154,7 @@ function markerContent(activity) {
     <span>${escapeHtml(activity.locationName || mapQuery(activity))}</span>
     <div>
       <a href="${escapeHtml(activityMapUrl(activity))}" target="_blank" rel="noopener noreferrer">View in Google Maps</a>
-      <a href="${escapeHtml(directionsUrl(activity))}" target="_blank" rel="noopener noreferrer">Directions from Hoosick Falls</a>
+      <a href="${escapeHtml(directionsUrl(activity))}" target="_blank" rel="noopener noreferrer">Directions from home base</a>
     </div>
   </div>`;
 }
@@ -269,7 +269,7 @@ function renderList(mapped) {
         <p class="location-contributor">Added by ${escapeHtml(activity.submittedBy)} · ${Number(activity.voteCount || 0)} ${Number(activity.voteCount || 0) === 1 ? "vote" : "votes"}</p>
         <div class="location-links">
           <a href="${escapeHtml(activityMapUrl(activity))}" target="_blank" rel="noopener noreferrer">View in Google Maps ↗</a>
-          <a href="${escapeHtml(directionsUrl(activity))}" target="_blank" rel="noopener noreferrer">Directions from Hoosick Falls ↗</a>
+          <a href="${escapeHtml(directionsUrl(activity))}" target="_blank" rel="noopener noreferrer">Directions from home base ↗</a>
           ${activity.infoUrl && /^https?:\/\//i.test(activity.infoUrl) ? `<a href="${escapeHtml(activity.infoUrl)}" target="_blank" rel="noopener noreferrer">More information ↗</a>` : ""}
         </div>
       </div>

@@ -7,6 +7,7 @@ A small family planning site for July 18–25, 2026. Relatives can:
 - Save a place/address and Google Maps Share link for an activity, then review all saved destinations on the Locations page.
 - Edit every field on an existing activity from its card on the public idea board while keeping its votes and discussion.
 - Filter the Locations page by trip day or highest vote total and view the matching places in an embedded Google Map.
+- Coordinate meals for 12 people with one all-day helper, Mom on breakfast, restaurant lunches, and editable chef signups with dishes, ingredients, and cooking instructions.
 - Filter ideas for everyone, adults, seniors, teens, kids, or little kids.
 - Vote for ideas without creating an account.
 - Use a shared group chat and discuss individual activity ideas.
@@ -127,6 +128,7 @@ These commands modify production data immediately. Always run the list command f
 
 ## Privacy and maintenance notes
 
-- The site is public-by-link. Contributor names, chat posts, event discussions, day claims, and location fields are visible. Anyone with the link can edit a day claim or any event details, so do not add private addresses, door codes, or sensitive travel details.
+- The site is public-by-link. Contributor names, chat posts, event discussions, day claims, meal signups, and location fields are visible. Anyone with the link can edit day claims, meal positions, or event details, so do not add private addresses, door codes, or sensitive travel details.
+- The exact home-base address is intentionally public for this trip. Remove it and take down or restrict the site and repository promptly after the vacation.
 - A claim is first-come, first-served, but its displayed family and submitter names can be corrected from the calendar with **Edit claim**.
 - Before broadly sharing the URL, consider enabling Cloudflare Web Analytics and a basic WAF rate-limit rule for `/api/*` if traffic becomes noisy.

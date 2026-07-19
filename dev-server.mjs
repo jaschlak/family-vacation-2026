@@ -9,6 +9,7 @@ const dataDir = join(root, ".data");
 const dataFile = join(dataDir, "local.json");
 const port = Number(process.env.PORT || 8788);
 const dates = Array.from({ length: 8 }, (_, index) => `2026-07-${String(18 + index).padStart(2, "0")}`);
+const eatingOutDates = new Set(["2026-07-19", "2026-07-22"]);
 const nwsForecastUrl = "https://api.weather.gov/gridpoints/ALY/84,77/forecast";
 const initialData = {
   days: dates.map((date) => ({ date, familyName: null, claimedBy: null, claimedAt: null })),
@@ -77,6 +78,27 @@ function tripPayload(data) {
   };
 }
 
+function mealSchedule(data) {
+  const assignments = Array.isArray(data.mealAssignments) ? data.mealAssignments : [];
+  return {
+    peoplePerMeal: 12,
+    days: dates.map((date) => {
+      const bySlot = new Map(assignments.filter((item) => item.date === date).map((item) => [item.slot, item]));
+      return {
+        date,
+        helper: bySlot.get("helper") || null,
+        meals: [
+          { meal: "breakfast", status: "fixed", assignedTo: "Mom" },
+          eatingOutDates.has(date)
+            ? { meal: "lunch", status: "eatingOut", assignedTo: null }
+            : { meal: "lunch", status: bySlot.has("lunch") ? "claimed" : "open", ...(bySlot.get("lunch") || { assignedTo: null }) },
+          { meal: "dinner", status: bySlot.has("dinner") ? "claimed" : "open", ...(bySlot.get("dinner") || { assignedTo: null }) }
+        ]
+      };
+    })
+  };
+}
+
 function sendJson(response, body, status = 200) {
   response.writeHead(status, { "Content-Type": "application/json", "Cache-Control": "no-store" });
   response.end(JSON.stringify(body));
@@ -115,6 +137,40 @@ createServer(async (request, response) => {
     if (url.pathname === "/api/map-config" && request.method === "GET") {
       const apiKey = typeof process.env.GOOGLE_MAPS_EMBED_KEY === "string" ? process.env.GOOGLE_MAPS_EMBED_KEY.trim() : "";
       return sendJson(response, { configured: Boolean(apiKey), apiKey: apiKey || null });
+    }
+
+    if (url.pathname === "/api/meals" && request.method === "GET") {
+      return sendJson(response, mealSchedule(await loadData()));
+    }
+
+    if (url.pathname === "/api/meals" && ["PUT", "DELETE"].includes(request.method)) {
+      const input = await bodyJson(request);
+      const date = typeof input?.date === "string" ? input.date.trim() : "";
+      const slot = typeof input?.slot === "string" ? input.slot.trim().toLowerCase() : "";
+      const valid = dates.includes(date) && ["helper", "lunch", "dinner"].includes(slot) && !(slot === "lunch" && eatingOutDates.has(date));
+      if (!valid) return sendJson(response, { error: "Choose an open helper or chef position." }, 400);
+      const data = await loadData();
+      if (!Array.isArray(data.mealAssignments)) data.mealAssignments = [];
+      const existing = data.mealAssignments.findIndex((item) => item.date === date && item.slot === slot);
+      if (request.method === "DELETE") {
+        if (existing !== -1) data.mealAssignments.splice(existing, 1);
+      } else {
+        const assignedTo = typeof input?.assignedTo === "string" ? input.assignedTo.trim().slice(0, 80) : "";
+        if (input?.website || assignedTo.length < 2) return sendJson(response, { error: "Add the name of the person taking this position." }, 400);
+        const assignment = {
+          date,
+          slot,
+          assignedTo,
+          dishName: slot === "helper" || typeof input?.dishName !== "string" ? null : input.dishName.trim().slice(0, 120) || null,
+          ingredients: slot === "helper" || typeof input?.ingredients !== "string" ? null : input.ingredients.trim().slice(0, 3000) || null,
+          instructions: slot === "helper" || typeof input?.instructions !== "string" ? null : input.instructions.trim().slice(0, 5000) || null,
+          updatedAt: new Date().toISOString()
+        };
+        if (existing === -1) data.mealAssignments.push(assignment);
+        else data.mealAssignments[existing] = assignment;
+      }
+      await saveData(data);
+      return sendJson(response, mealSchedule(data));
     }
 
     if (url.pathname === "/api/messages" && request.method === "GET") {

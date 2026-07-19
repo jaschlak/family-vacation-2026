@@ -20,5 +20,8 @@
 /locations.js
   Cache-Control: public, max-age=0, must-revalidate
 
+/meals.js
+  Cache-Control: public, max-age=0, must-revalidate
+
 /api/*
   Cache-Control: no-store
