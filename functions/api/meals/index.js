@@ -11,6 +11,7 @@ function mapAssignment(row) {
     slot: row.slot,
     assignedTo: row.assigned_to,
     dishName: row.dish_name,
+    shoppingList: row.shopping_list,
     ingredients: row.ingredients,
     instructions: row.instructions,
     updatedAt: row.updated_at
@@ -62,6 +63,7 @@ export async function onRequestPut({ request, env }) {
   const slot = clean(body.slot, 10).toLowerCase();
   const assignedTo = clean(body.assignedTo, 80);
   const dishName = slot === "helper" ? "" : clean(body.dishName, 120);
+  const shoppingList = slot === "helper" ? "" : clean(body.shoppingList, 3000);
   const ingredients = slot === "helper" ? "" : clean(body.ingredients, 3000);
   const instructions = slot === "helper" ? "" : clean(body.instructions, 5000);
   if (!validSlot(date, slot)) return json({ error: "Choose an open helper or chef position." }, 400);
@@ -69,15 +71,16 @@ export async function onRequestPut({ request, env }) {
 
   try {
     await env.DB.prepare(`
-      INSERT INTO meal_assignments (trip_date, slot, assigned_to, dish_name, ingredients, instructions, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+      INSERT INTO meal_assignments (trip_date, slot, assigned_to, dish_name, shopping_list, ingredients, instructions, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
       ON CONFLICT (trip_date, slot) DO UPDATE SET
         assigned_to = excluded.assigned_to,
         dish_name = excluded.dish_name,
+        shopping_list = excluded.shopping_list,
         ingredients = excluded.ingredients,
         instructions = excluded.instructions,
         updated_at = datetime('now')
-    `).bind(date, slot, assignedTo, dishName || null, ingredients || null, instructions || null).run();
+    `).bind(date, slot, assignedTo, dishName || null, shoppingList || null, ingredients || null, instructions || null).run();
     return json(await loadSchedule(env));
   } catch (error) {
     console.error("meal signup failed", error);

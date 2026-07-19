@@ -60,10 +60,11 @@ function helperSlot(day) {
 }
 
 function recipeDetails(meal) {
-  if (!meal.ingredients && !meal.instructions) return "";
+  if (!meal.shoppingList && !meal.ingredients && !meal.instructions) return "";
   return `<details class="meal-recipe">
-    <summary>Ingredients &amp; instructions</summary>
+    <summary>Shopping, ingredients &amp; instructions</summary>
     <div>
+      ${meal.shoppingList ? `<strong>Shopping list</strong><p>${escapeHtml(meal.shoppingList)}</p>` : ""}
       ${meal.ingredients ? `<strong>Ingredients</strong><p>${escapeHtml(meal.ingredients)}</p>` : ""}
       ${meal.instructions ? `<strong>Instructions</strong><p>${escapeHtml(meal.instructions)}</p>` : ""}
     </div>
@@ -135,6 +136,7 @@ function openSignup(date, slot) {
   chefDetails.hidden = helper;
   chefDetails.querySelectorAll("input, textarea").forEach((input) => { input.disabled = helper; });
   document.querySelector("#meal-dish").value = position?.dishName || "";
+  document.querySelector("#meal-shopping-list").value = position?.shoppingList || "";
   document.querySelector("#meal-ingredients").value = position?.ingredients || "";
   document.querySelector("#meal-instructions").value = position?.instructions || "";
   document.querySelector("#meal-release").hidden = !position?.assignedTo;
@@ -163,6 +165,7 @@ mealForm.addEventListener("submit", async (event) => {
         slot: form.get("slot"),
         assignedTo: form.get("assignedTo"),
         dishName: form.get("dishName"),
+        shoppingList: form.get("shoppingList"),
         ingredients: form.get("ingredients"),
         instructions: form.get("instructions"),
         website: form.get("website")

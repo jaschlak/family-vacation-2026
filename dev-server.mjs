@@ -162,6 +162,7 @@ createServer(async (request, response) => {
           slot,
           assignedTo,
           dishName: slot === "helper" || typeof input?.dishName !== "string" ? null : input.dishName.trim().slice(0, 120) || null,
+          shoppingList: slot === "helper" || typeof input?.shoppingList !== "string" ? null : input.shoppingList.trim().slice(0, 3000) || null,
           ingredients: slot === "helper" || typeof input?.ingredients !== "string" ? null : input.ingredients.trim().slice(0, 3000) || null,
           instructions: slot === "helper" || typeof input?.instructions !== "string" ? null : input.instructions.trim().slice(0, 5000) || null,
           updatedAt: new Date().toISOString()

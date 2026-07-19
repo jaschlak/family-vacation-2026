@@ -7,7 +7,7 @@ A small family planning site for July 18–25, 2026. Relatives can:
 - Save a place/address and Google Maps Share link for an activity, then review all saved destinations on the Locations page.
 - Edit every field on an existing activity from its card on the public idea board while keeping its votes and discussion.
 - Filter the Locations page by trip day or highest vote total and view the matching places in an embedded Google Map.
-- Coordinate meals for 12 people with one all-day helper, Mom on breakfast, restaurant lunches, and editable chef signups with dishes, ingredients, and cooking instructions.
+- Coordinate meals for 12 people with one all-day helper, Mom on breakfast, restaurant lunches, and editable chef signups with dishes, shopping lists, ingredients, and cooking instructions.
 - Filter ideas for everyone, adults, seniors, teens, kids, or little kids.
 - Vote for ideas without creating an account.
 - Use a shared group chat and discuss individual activity ideas.
