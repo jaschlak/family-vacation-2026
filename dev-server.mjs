@@ -192,6 +192,20 @@ createServer(async (request, response) => {
       return sendJson(response, { day });
     }
 
+    if (url.pathname.startsWith("/api/days/") && request.method === "PATCH") {
+      const date = decodeURIComponent(url.pathname.split("/").pop());
+      const input = await bodyJson(request);
+      const data = await loadData();
+      const day = data.days.find((item) => item.date === date);
+      if (!day || !input?.familyName?.trim() || !input?.claimedBy?.trim()) return sendJson(response, { error: "Add valid claim details." }, 400);
+      if (!day.familyName) return sendJson(response, { error: "That day is no longer claimed. Refresh and claim it again." }, 409);
+      day.familyName = input.familyName.trim().slice(0, 80);
+      day.claimedBy = input.claimedBy.trim().slice(0, 80);
+      day.claimedAt = new Date().toISOString();
+      await saveData(data);
+      return sendJson(response, { day });
+    }
+
     const locationRoute = url.pathname.match(/^\/api\/activities\/(\d+)\/location$/);
     if (locationRoute && request.method === "PUT") {
       const input = await bodyJson(request);
@@ -235,6 +249,54 @@ createServer(async (request, response) => {
       await saveData(data);
       const voteCount = data.votes.filter((vote) => vote.activityId === id).length;
       return sendJson(response, { activityId: id, voteCount, voted: request.method === "PUT" });
+    }
+
+    const editActivityRoute = url.pathname.match(/^\/api\/activities\/(\d+)\/edit$/);
+    if (editActivityRoute && request.method === "PATCH") {
+      const input = await bodyJson(request);
+      const allowed = ["Everyone", "Adults", "Seniors", "Teens", "Kids", "Little kids"];
+      const audience = Array.isArray(input?.audience) ? [...new Set(input.audience.filter((item) => allowed.includes(item)))] : [];
+      const isEveryday = input?.isEveryday === true;
+      const dateTimePattern = /^2026-07-(1[89]|2[0-5])T([01]\d|2[0-3]):[0-5]\d$/;
+      const validRange = isEveryday || (dateTimePattern.test(input?.startsAt) && dateTimePattern.test(input?.endsAt) && input.endsAt > input.startsAt);
+      if (!input?.title?.trim() || !input?.submittedBy?.trim() || !audience.length || !validRange) {
+        return sendJson(response, { error: "Add a name, audience, valid time range, and contributor name." }, 400);
+      }
+      const infoUrl = input.infoUrl?.trim().slice(0, 500) || null;
+      try {
+        if (infoUrl && !["http:", "https:"].includes(new URL(infoUrl).protocol)) throw new Error();
+      } catch {
+        return sendJson(response, { error: "The information link needs to be a full web address." }, 400);
+      }
+      const mapsUrl = input.mapsUrl?.trim().slice(0, 500) || null;
+      try {
+        if (mapsUrl) {
+          const map = new URL(mapsUrl);
+          const host = map.hostname.toLowerCase();
+          const valid = map.protocol === "https:" && (host === "maps.app.goo.gl" || (host === "goo.gl" && map.pathname.startsWith("/maps")) || host.startsWith("maps.google.") || (host.includes("google.") && map.pathname.startsWith("/maps")));
+          if (!valid) throw new Error();
+        }
+      } catch {
+        return sendJson(response, { error: "The map link needs to be a Google Maps web address." }, 400);
+      }
+      const data = await loadData();
+      const activity = data.activities.find((item) => item.id === Number(editActivityRoute[1]));
+      if (!activity) return sendJson(response, { error: "That event no longer exists." }, 404);
+      const locationName = input.locationName?.trim().slice(0, 200) || (mapsUrl ? await resolveMapsLocation(mapsUrl) : null);
+      Object.assign(activity, {
+        title: input.title.trim().slice(0, 100),
+        audience,
+        isEveryday,
+        startsAt: isEveryday ? "2026-07-18T00:00" : input.startsAt,
+        endsAt: isEveryday ? "2026-07-25T23:59" : input.endsAt,
+        infoUrl,
+        locationName,
+        mapsUrl,
+        notes: input.notes?.trim().slice(0, 2000) || null,
+        submittedBy: input.submittedBy.trim().slice(0, 80)
+      });
+      await saveData(data);
+      return sendJson(response, { activity });
     }
 
     if (url.pathname === "/api/activities" && request.method === "POST") {

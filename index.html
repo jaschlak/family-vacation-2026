@@ -131,13 +131,14 @@
       <section class="form-section" id="add-idea">
         <div class="shell form-layout">
           <div class="form-intro">
-            <p class="eyebrow dark">Add to the adventure</p>
-            <h2>Have an idea?</h2>
-            <p>Share just enough for everyone to picture it. Details can come later.</p>
+            <p class="eyebrow dark" id="idea-form-eyebrow">Add to the adventure</p>
+            <h2 id="idea-form-title">Have an idea?</h2>
+            <p id="idea-form-description">Share just enough for everyone to picture it. Details can come later.</p>
             <div class="form-doodle" aria-hidden="true">↗</div>
           </div>
 
           <form class="idea-form" id="idea-form">
+            <input id="idea-activity-id" name="activityId" type="hidden" />
             <div class="field full">
               <label for="title">What should we call it?</label>
               <input id="title" name="title" type="text" maxlength="100" placeholder="e.g. Sunset picnic at the lake" required />
@@ -207,7 +208,10 @@
             </div>
             <div class="form-footer full">
               <p>Ideas are visible to anyone with this site’s link.</p>
-              <button class="button button-primary" type="submit">Add this idea <span aria-hidden="true">→</span></button>
+              <div class="idea-form-actions">
+                <button class="idea-edit-cancel" id="idea-edit-cancel" type="button" hidden>Cancel editing</button>
+                <button class="button button-primary" id="idea-submit" type="submit">Add this idea <span aria-hidden="true">→</span></button>
+              </div>
             </div>
           </form>
         </div>
@@ -223,11 +227,12 @@
 
     <dialog id="claim-dialog">
       <form method="dialog" class="dialog-card" id="claim-form">
-        <button class="dialog-close" value="cancel" aria-label="Close">×</button>
+        <button class="dialog-close" id="claim-close" type="button" aria-label="Close">×</button>
         <p class="eyebrow coral">Take the lead</p>
         <h2 id="claim-title">Claim this day</h2>
-        <p>You’ll be the family point person. Plans can still be decided together.</p>
+        <p id="claim-description">You’ll be the family point person. Plans can still be decided together.</p>
         <input type="hidden" id="claim-date" name="date" />
+        <input type="hidden" id="claim-mode" name="mode" value="claim" />
         <div class="field">
           <label for="family-name">Family name</label>
           <input id="family-name" name="familyName" maxlength="80" placeholder="e.g. The Schlak family" required />
@@ -236,7 +241,7 @@
           <label for="claim-name">Claimed by</label>
           <input id="claim-name" name="claimedBy" maxlength="80" placeholder="Your name" required />
         </div>
-        <button class="button button-primary full-width" type="submit" value="default">Claim this day</button>
+        <button class="button button-primary full-width" id="claim-submit" type="submit" value="default">Claim this day</button>
       </form>
     </dialog>
 

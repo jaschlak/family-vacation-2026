@@ -57,6 +57,47 @@ function syncLocationInputs(select) {
   });
 }
 
+function resetIdeaForm() {
+  ideaForm.reset();
+  document.querySelector("#idea-activity-id").value = "";
+  document.querySelector("#idea-form-eyebrow").textContent = "Add to the adventure";
+  document.querySelector("#idea-form-title").textContent = "Have an idea?";
+  document.querySelector("#idea-form-description").textContent = "Share just enough for everyone to picture it. Details can come later.";
+  document.querySelector("#idea-edit-cancel").hidden = true;
+  document.querySelector("#idea-submit").innerHTML = `Add this idea <span aria-hidden="true">→</span>`;
+  syncEverydayFields(false);
+  syncLocationInputs(document.querySelector("#location-type"));
+}
+
+function openIdeaEditor(activityId) {
+  const activity = state.activities.find((idea) => Number(idea.id) === Number(activityId));
+  if (!activity) return;
+  ideaForm.reset();
+  document.querySelector("#idea-activity-id").value = activity.id;
+  document.querySelector("#title").value = activity.title || "";
+  ideaForm.querySelectorAll('[name="audience"]').forEach((input) => {
+    input.checked = activity.audience.includes(input.value);
+  });
+  document.querySelector("#is-everyday").checked = Boolean(activity.isEveryday);
+  document.querySelector("#starts-at").value = activity.isEveryday ? "" : activity.startsAt || "";
+  document.querySelector("#ends-at").value = activity.isEveryday ? "" : activity.endsAt || "";
+  document.querySelector("#info-url").value = activity.infoUrl || "";
+  document.querySelector("#location-name").value = activity.locationName || "";
+  document.querySelector("#maps-url").value = activity.mapsUrl || "";
+  document.querySelector("#location-type").value = activity.mapsUrl ? "maps" : "address";
+  document.querySelector("#notes").value = activity.notes || "";
+  document.querySelector("#submitted-by").value = activity.submittedBy || "";
+  document.querySelector("#idea-form-eyebrow").textContent = "Update the adventure";
+  document.querySelector("#idea-form-title").textContent = "Editing event";
+  document.querySelector("#idea-form-description").textContent = "Change any details below. Existing votes and discussion messages will be kept.";
+  document.querySelector("#idea-edit-cancel").hidden = false;
+  document.querySelector("#idea-submit").innerHTML = `Save changes <span aria-hidden="true">→</span>`;
+  syncEverydayFields(Boolean(activity.isEveryday));
+  syncLocationInputs(document.querySelector("#location-type"));
+  document.querySelector("#add-idea").scrollIntoView({ behavior: "smooth", block: "start" });
+  setTimeout(() => document.querySelector("#title").focus({ preventScroll: true }), 350);
+}
+
 const escapeHtml = (value = "") => String(value).replace(/[&<>'"]/g, (char) => ({
   "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;"
 })[char]);
@@ -96,6 +137,7 @@ function locationControls(idea) {
   return `<div class="idea-location-actions">
     ${mapLink(idea)}
     <button class="location-edit-button" type="button" data-location-id="${idea.id}">${hasLocation ? "Edit location" : "Add location"}</button>
+    <button class="event-edit-button" type="button" data-edit-activity-id="${idea.id}">Edit event</button>
   </div>`;
 }
 
@@ -163,8 +205,9 @@ function renderDays() {
         </div>
         ${claimed ? `
           <div class="day-owner"><span>Led by</span><strong>${escapeHtml(day.familyName)}</strong></div>
+          <button class="claim-button" type="button" data-claim-date="${day.date}" data-claim-mode="edit">Edit claim →</button>
         ` : `
-          <button class="claim-button" type="button" data-claim-date="${day.date}">Claim this day →</button>
+          <button class="claim-button" type="button" data-claim-date="${day.date}" data-claim-mode="claim">Claim this day →</button>
         `}
       </article>`;
   }).join("");
@@ -477,35 +520,47 @@ dayGrid.addEventListener("click", (event) => {
   const button = event.target.closest("[data-claim-date]");
   if (!button) return;
   const selected = state.days.find((day) => day.date === button.dataset.claimDate);
+  if (!selected) return;
   const display = dateParts(selected.date);
+  const editing = button.dataset.claimMode === "edit";
   claimForm.reset();
   document.querySelector("#claim-date").value = selected.date;
-  document.querySelector("#claim-title").textContent = `Claim ${display.weekday}, July ${display.day}`;
+  document.querySelector("#claim-mode").value = editing ? "edit" : "claim";
+  document.querySelector("#claim-title").textContent = `${editing ? "Edit" : "Claim"} ${display.weekday}, July ${display.day}`;
+  document.querySelector("#claim-description").textContent = editing
+    ? "Update the family point person shown for this day."
+    : "You’ll be the family point person. Plans can still be decided together.";
+  document.querySelector("#family-name").value = editing ? selected.familyName || "" : "";
+  document.querySelector("#claim-name").value = editing ? selected.claimedBy || "" : "";
+  document.querySelector("#claim-submit").textContent = editing ? "Save changes" : "Claim this day";
   claimDialog.showModal();
 });
+
+document.querySelector("#claim-close").addEventListener("click", () => claimDialog.close());
 
 claimForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const submit = claimForm.querySelector('[type="submit"]');
   const form = new FormData(claimForm);
+  const editing = form.get("mode") === "edit";
   submit.disabled = true;
-  submit.textContent = "Claiming…";
+  submit.textContent = editing ? "Saving…" : "Claiming…";
   try {
     const result = await request(`/api/days/${form.get("date")}`, {
-      method: "PUT",
+      method: editing ? "PATCH" : "PUT",
       body: JSON.stringify({ familyName: form.get("familyName"), claimedBy: form.get("claimedBy") })
     });
     const index = state.days.findIndex((day) => day.date === result.day.date);
     state.days[index] = result.day;
     renderDays();
     claimDialog.close();
-    toast(`${result.day.familyName} has the lead!`);
+    toast(editing ? "Day claim updated." : `${result.day.familyName} has the lead!`);
   } catch (error) {
     toast(error.message, true);
     if (error.message.toLowerCase().includes("claimed")) await loadTrip();
   } finally {
     submit.disabled = false;
-    submit.textContent = "Claim this day";
+    submit.textContent = editing ? "Save changes" : "Claim this day";
   }
 });
 
@@ -513,6 +568,8 @@ ideaForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const submit = ideaForm.querySelector('[type="submit"]');
   const form = new FormData(ideaForm);
+  const activityId = Number(form.get("activityId"));
+  const editing = Number.isSafeInteger(activityId) && activityId > 0;
   const audience = form.getAll("audience");
   const isEveryday = form.get("everyday") === "on";
   if (!audience.length) return toast("Choose who should consider this idea.", true);
@@ -522,10 +579,10 @@ ideaForm.addEventListener("submit", async (event) => {
   if (!isEveryday && form.get("endsAt") <= form.get("startsAt")) return toast("The end time needs to be after the start time.", true);
 
   submit.disabled = true;
-  submit.textContent = "Adding…";
+  submit.textContent = editing ? "Saving…" : "Adding…";
   try {
-    const result = await request("/api/activities", {
-      method: "POST",
+    const result = await request(editing ? `/api/activities/${activityId}/edit` : "/api/activities", {
+      method: editing ? "PATCH" : "POST",
       body: JSON.stringify({
         title: form.get("title"), audience, isEveryday, startsAt: form.get("startsAt"), endsAt: form.get("endsAt"),
         infoUrl: form.get("infoUrl"),
@@ -534,7 +591,12 @@ ideaForm.addEventListener("submit", async (event) => {
         notes: form.get("notes"), submittedBy: form.get("submittedBy"), website: form.get("website")
       })
     });
-    state.activities.push(result.activity);
+    if (editing) {
+      const index = state.activities.findIndex((idea) => Number(idea.id) === activityId);
+      if (index !== -1) state.activities[index] = result.activity;
+    } else {
+      state.activities.push(result.activity);
+    }
     state.activities.sort((a, b) => Number(Boolean(b.isEveryday)) - Number(Boolean(a.isEveryday)) || a.startsAt.localeCompare(b.startsAt));
     state.audienceFilter = "all";
     state.availabilityFilter = "all";
@@ -542,17 +604,21 @@ ideaForm.addEventListener("submit", async (event) => {
     document.querySelectorAll("[data-availability-filter]").forEach((button) => button.classList.toggle("active", button.dataset.availabilityFilter === "all"));
     renderIdeas();
     renderTimeline();
-    ideaForm.reset();
-    syncEverydayFields(false);
-    syncLocationInputs(document.querySelector("#location-type"));
-    toast("Your idea is on the board!");
+    resetIdeaForm();
+    toast(editing ? "Event updated." : "Your idea is on the board!");
     document.querySelector("#ideas").scrollIntoView({ behavior: "smooth" });
   } catch (error) {
     toast(error.message, true);
   } finally {
     submit.disabled = false;
-    submit.innerHTML = `Add this idea <span aria-hidden="true">→</span>`;
+    const stillEditing = Boolean(document.querySelector("#idea-activity-id").value);
+    submit.innerHTML = stillEditing ? `Save changes <span aria-hidden="true">→</span>` : `Add this idea <span aria-hidden="true">→</span>`;
   }
+});
+
+document.querySelector("#idea-edit-cancel").addEventListener("click", () => {
+  resetIdeaForm();
+  document.querySelector("#ideas").scrollIntoView({ behavior: "smooth" });
 });
 
 document.querySelector(".filter-bar").addEventListener("click", (event) => {
@@ -581,6 +647,11 @@ document.querySelectorAll("[data-location-type]").forEach((select) => {
 });
 
 document.querySelector(".ideas-section").addEventListener("click", async (event) => {
+  const edit = event.target.closest("[data-edit-activity-id]");
+  if (edit) {
+    openIdeaEditor(Number(edit.dataset.editActivityId));
+    return;
+  }
   const location = event.target.closest("[data-location-id]");
   if (location) {
     openLocationEditor(Number(location.dataset.locationId));
