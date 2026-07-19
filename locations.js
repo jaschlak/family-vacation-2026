@@ -153,6 +153,7 @@ function markerContent(activity) {
     <strong>${escapeHtml(activity.title)}</strong>
     <span>${escapeHtml(activity.locationName || mapQuery(activity))}</span>
     <div>
+      <a href="/?event=${encodeURIComponent(activity.id)}">Full event details</a>
       <a href="${escapeHtml(activityMapUrl(activity))}" target="_blank" rel="noopener noreferrer">View in Google Maps</a>
       <a href="${escapeHtml(directionsUrl(activity))}" target="_blank" rel="noopener noreferrer">Directions from home base</a>
     </div>
@@ -268,6 +269,7 @@ function renderList(mapped) {
         <p class="location-address">${escapeHtml(activity.locationName || "Google Maps location shared by the contributor")}</p>
         <p class="location-contributor">Added by ${escapeHtml(activity.submittedBy)} · ${Number(activity.voteCount || 0)} ${Number(activity.voteCount || 0) === 1 ? "vote" : "votes"}</p>
         <div class="location-links">
+          <a href="/?event=${encodeURIComponent(activity.id)}">Full event details →</a>
           <a href="${escapeHtml(activityMapUrl(activity))}" target="_blank" rel="noopener noreferrer">View in Google Maps ↗</a>
           <a href="${escapeHtml(directionsUrl(activity))}" target="_blank" rel="noopener noreferrer">Directions from home base ↗</a>
           ${activity.infoUrl && /^https?:\/\//i.test(activity.infoUrl) ? `<a href="${escapeHtml(activity.infoUrl)}" target="_blank" rel="noopener noreferrer">More information ↗</a>` : ""}

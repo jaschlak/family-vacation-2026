@@ -102,7 +102,7 @@ function render() {
 
   mealDays.innerHTML = days.map((day) => {
     const date = dateParts(day.date);
-    return `<article class="meal-day-card">
+    return `<article class="meal-day-card" id="meals-${day.date}">
       <header><div><span>${date.shortWeekday}</span><strong>${date.day}</strong></div><h3>${date.weekday}<small>${date.month} ${date.day}</small></h3></header>
       ${helperSlot(day)}
       <div class="meal-slots">${day.meals.map((meal) => mealSlot(day, meal)).join("")}</div>

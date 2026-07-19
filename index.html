@@ -111,13 +111,24 @@
               <button class="timeline-filter active" data-timeline-filter="all" type="button" aria-pressed="true">Side by side</button>
               <button class="timeline-filter" data-timeline-filter="winners" type="button" aria-pressed="false">Most voted</button>
             </div>
+            <div class="timeline-scope-controls" aria-label="Choose which event availability to show">
+              <span>Availability</span>
+              <button class="timeline-filter active" data-timeline-scope="include" type="button" aria-pressed="true">This day + everyday</button>
+              <button class="timeline-filter" data-timeline-scope="scheduled" type="button" aria-pressed="false">Scheduled this day only</button>
+            </div>
             <p class="timeline-filter-note" id="timeline-filter-note" aria-live="polite" hidden></p>
             <div class="timeline-summary">
               <div>
                 <p class="eyebrow coral">Day at a glance</p>
                 <h3 id="timeline-title">Wednesday, July 22</h3>
               </div>
-              <p id="timeline-count">3 ideas</p>
+              <div class="timeline-day-resources">
+                <p id="timeline-count">3 ideas</p>
+                <div>
+                  <a id="timeline-meals-link" href="/meals.html#meals-2026-07-22">Meals for this day →</a>
+                  <a id="timeline-weather-link" href="/weather.html#weather-2026-07-22">Weather for this day →</a>
+                </div>
+              </div>
             </div>
             <div class="timeline-everyday" id="timeline-everyday" hidden></div>
             <div class="timeline-choices" id="timeline-choices" hidden></div>
@@ -244,6 +255,19 @@
         </div>
         <button class="button button-primary full-width" id="claim-submit" type="submit" value="default">Claim this day</button>
       </form>
+    </dialog>
+
+    <dialog id="event-details-dialog" class="event-details-dialog">
+      <div class="dialog-card event-details-card">
+        <button class="dialog-close" id="event-details-close" type="button" aria-label="Close">×</button>
+        <p class="eyebrow coral">Event details</p>
+        <h2 id="event-details-title">Event</h2>
+        <div id="event-details-content"></div>
+        <div class="event-details-actions">
+          <button class="button button-secondary" id="event-details-discuss" type="button">Open discussion</button>
+          <button class="button button-primary" id="event-details-edit" type="button">Edit event</button>
+        </div>
+      </div>
     </dialog>
 
     <dialog id="discussion-dialog">

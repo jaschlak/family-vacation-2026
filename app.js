@@ -21,7 +21,7 @@ try {
   votedActivities = new Set();
 }
 
-const state = { days: [], activities: [], audienceFilter: "all", availabilityFilter: "all", timelineConflictFilter: "all", view: "board", timelineDate: "2026-07-22" };
+const state = { days: [], activities: [], audienceFilter: "all", availabilityFilter: "all", timelineConflictFilter: "all", timelineScope: "include", view: "board", timelineDate: "2026-07-22" };
 const dayGrid = document.querySelector("#day-grid");
 const ideaList = document.querySelector("#idea-list");
 const emptyState = document.querySelector("#empty-state");
@@ -37,6 +37,8 @@ const ideaForm = document.querySelector("#idea-form");
 const discussionDialog = document.querySelector("#discussion-dialog");
 const discussionForm = document.querySelector("#discussion-form");
 const discussionMessages = document.querySelector("#discussion-messages");
+const eventDetailsDialog = document.querySelector("#event-details-dialog");
+const eventDetailsContent = document.querySelector("#event-details-content");
 const locationDialog = document.querySelector("#location-dialog");
 const locationForm = document.querySelector("#location-form");
 
@@ -135,6 +137,7 @@ function mapLink(idea, compact = false) {
 function locationControls(idea) {
   const hasLocation = Boolean(idea.locationName || idea.mapsUrl);
   return `<div class="idea-location-actions">
+    <button class="event-details-button" type="button" data-event-details-id="${idea.id}">View details</button>
     ${mapLink(idea)}
     <button class="location-edit-button" type="button" data-location-id="${idea.id}">${hasLocation ? "Edit location" : "Add location"}</button>
     <button class="event-edit-button" type="button" data-edit-activity-id="${idea.id}">Edit event</button>
@@ -193,12 +196,25 @@ function rangeLabel(start, end) {
   return `${timeLabel(start)}–${endDate.shortWeekday} ${endDate.day}, ${timeLabel(end)}`;
 }
 
+function fullRangeLabel(start, end) {
+  const startDate = dateParts(start);
+  const endDate = dateParts(end);
+  if (start.slice(0, 10) === end.slice(0, 10)) {
+    return `${startDate.weekday}, ${startDate.month} ${startDate.day} · ${rangeLabel(start, end)}`;
+  }
+  return `${startDate.weekday}, ${startDate.month} ${startDate.day} at ${timeLabel(start)} through ${endDate.weekday}, ${endDate.month} ${endDate.day} at ${timeLabel(end)}`;
+}
+
+function exactTimeMarkup(idea) {
+  return `<p class="timeline-event-time"><span>Exact time</span><strong>${rangeLabel(idea.startsAt, idea.endsAt)}</strong></p>`;
+}
+
 function renderDays() {
   dayGrid.innerHTML = state.days.map((day) => {
     const date = dateParts(day.date);
     const claimed = Boolean(day.familyName);
     return `
-      <article class="day-card ${claimed ? "claimed" : "open"}">
+      <article class="day-card ${claimed ? "claimed" : "open"}" data-day-date="${day.date}" tabindex="0" role="link" aria-label="View ${date.weekday}, July ${date.day}">
         <div class="day-top">
           <div><p class="day-name">${date.weekday}</p><div class="day-number">${date.day}</div></div>
           <span class="day-status">${claimed ? "Claimed" : "Open"}</span>
@@ -209,6 +225,7 @@ function renderDays() {
         ` : `
           <button class="claim-button" type="button" data-claim-date="${day.date}" data-claim-mode="claim">Claim this day →</button>
         `}
+        <span class="day-view-hint">View this day →</span>
       </article>`;
   }).join("");
 }
@@ -235,7 +252,7 @@ function renderIdeas() {
       <small>${rangeLabel(idea.startsAt, idea.endsAt)}</small>
     `;
     return `
-      <article class="idea-card">
+      <article class="idea-card" data-event-id="${idea.id}" tabindex="0" role="button" aria-label="View details for ${escapeHtml(idea.title)}">
         <div class="idea-date">
           ${availability}
         </div>
@@ -339,13 +356,16 @@ function renderTimeline() {
   const selectedDate = dateParts(state.timelineDate);
   const dayIdeas = ideasForDay(state.timelineDate);
   const everydayIdeas = state.activities.filter((idea) => idea.isEveryday);
+  const showEveryday = state.timelineScope === "include";
   document.querySelector("#timeline-title").textContent = `${selectedDate.weekday}, July ${selectedDate.day}`;
+  document.querySelector("#timeline-meals-link").href = `/meals.html#meals-${state.timelineDate}`;
+  document.querySelector("#timeline-weather-link").href = `/weather.html#weather-${state.timelineDate}`;
   const scheduledLabel = `${dayIdeas.length} scheduled`;
   const everydayLabel = `${everydayIdeas.length} everyday`;
-  document.querySelector("#timeline-count").textContent = everydayIdeas.length ? `${scheduledLabel} · ${everydayLabel}` : scheduledLabel;
+  document.querySelector("#timeline-count").textContent = showEveryday && everydayIdeas.length ? `${scheduledLabel} · ${everydayLabel}` : scheduledLabel;
 
-  timelineEveryday.hidden = everydayIdeas.length === 0;
-  timelineEveryday.innerHTML = everydayIdeas.length === 0 ? "" : `
+  timelineEveryday.hidden = !showEveryday || everydayIdeas.length === 0;
+  timelineEveryday.innerHTML = !showEveryday || everydayIdeas.length === 0 ? "" : `
     <div class="timeline-everyday-heading">
       <strong>Available every day</strong>
       <span>These ideas can fit wherever there is room.</span>
@@ -353,7 +373,7 @@ function renderTimeline() {
     <div class="timeline-everyday-list">
       ${everydayIdeas.map((idea) => {
         const safeUrl = idea.infoUrl && /^https?:\/\//i.test(idea.infoUrl) ? escapeHtml(idea.infoUrl) : "";
-        return `<span class="timeline-everyday-item">${escapeHtml(idea.title)}${safeUrl ? ` · <a href="${safeUrl}" target="_blank" rel="noopener noreferrer">info</a>` : ""} ${mapLink(idea, true)} ${voteButton(idea, true)} ${discussionButton(idea, true)}</span>`;
+        return `<span class="timeline-everyday-item" data-event-id="${idea.id}" tabindex="0" role="button" aria-label="View details for ${escapeHtml(idea.title)}">${escapeHtml(idea.title)}${safeUrl ? ` · <a href="${safeUrl}" target="_blank" rel="noopener noreferrer">info</a>` : ""} ${mapLink(idea, true)} ${voteButton(idea, true)} ${discussionButton(idea, true)}</span>`;
       }).join("")}
     </div>`;
 
@@ -390,9 +410,10 @@ function renderTimeline() {
     <div class="timeline-choice-grid">
       ${overlapping.map((idea) => {
         const safeUrl = idea.infoUrl && /^https?:\/\//i.test(idea.infoUrl) ? escapeHtml(idea.infoUrl) : "";
-        return `<article class="timeline-choice">
+        return `<article class="timeline-choice" data-event-id="${idea.id}" tabindex="0" role="button" aria-label="View details for ${escapeHtml(idea.title)}">
           <h4>${escapeHtml(idea.title)}</h4>
-          <p>${rangeLabel(idea.startsAt, idea.endsAt)}</p>
+          ${exactTimeMarkup(idea)}
+          <button class="event-details-button compact" type="button" data-event-details-id="${idea.id}">View details</button>
           ${mapLink(idea, true)}
           ${voteButton(idea, true)}
           ${discussionButton(idea, true)}
@@ -413,9 +434,10 @@ function renderTimeline() {
         const safeUrl = idea.infoUrl && /^https?:\/\//i.test(idea.infoUrl) ? escapeHtml(idea.infoUrl) : "";
         const laneCount = Math.min(8, Math.max(1, idea.lanes));
         return `<div class="timeline-event-position lanes-${laneCount}" style="top:${top}px;height:${heightPx}px">
-          <article class="timeline-event tone-${index % 3 + 1}" style="grid-column:${idea.lane + 1}">
+          <article class="timeline-event tone-${index % 3 + 1}" style="grid-column:${idea.lane + 1}" data-event-id="${idea.id}" tabindex="0" role="button" aria-label="View details for ${escapeHtml(idea.title)}">
             <h4>${escapeHtml(idea.title)}</h4>
-            <p class="timeline-event-time">${rangeLabel(idea.startsAt, idea.endsAt)}</p>
+            ${exactTimeMarkup(idea)}
+            <button class="event-details-button compact" type="button" data-event-details-id="${idea.id}">View details</button>
             ${mapLink(idea, true)}
             ${voteButton(idea, true)}
             ${discussionButton(idea, true)}
@@ -476,7 +498,7 @@ async function loadDiscussion(activityId) {
 }
 
 function openDiscussion(activityId) {
-  const activity = state.activities.find((idea) => idea.id === activityId);
+  const activity = state.activities.find((idea) => Number(idea.id) === Number(activityId));
   if (!activity) return;
   discussionForm.reset();
   document.querySelector("#discussion-activity-id").value = activityId;
@@ -484,6 +506,43 @@ function openDiscussion(activityId) {
   document.querySelector("#discussion-author").value = storedValue(NAME_KEY) || "";
   discussionDialog.showModal();
   loadDiscussion(activityId);
+}
+
+function eventDetailRow(label, value) {
+  return `<div class="event-detail-row"><dt>${escapeHtml(label)}</dt><dd>${value}</dd></div>`;
+}
+
+function openEventDetails(activityId) {
+  const activity = state.activities.find((idea) => Number(idea.id) === Number(activityId));
+  if (!activity) return;
+  const safeInfoUrl = activity.infoUrl && /^https?:\/\//i.test(activity.infoUrl) ? escapeHtml(activity.infoUrl) : "";
+  const safeMapsUrl = activity.mapsUrl && /^https?:\/\//i.test(activity.mapsUrl) ? escapeHtml(activity.mapsUrl) : "";
+  const availability = activity.isEveryday
+    ? `Every day during the trip · July 18–25, 2026`
+    : fullRangeLabel(activity.startsAt, activity.endsAt);
+  const audience = Array.isArray(activity.audience) && activity.audience.length
+    ? activity.audience.map((group) => `<span class="tag">${escapeHtml(group)}</span>`).join("")
+    : `<span class="event-detail-empty">Not specified</span>`;
+  const location = activity.locationName
+    ? escapeHtml(activity.locationName)
+    : safeMapsUrl
+      ? `<a href="${safeMapsUrl}" target="_blank" rel="noopener noreferrer">Open the saved Google Maps location ↗</a>`
+      : `<span class="event-detail-empty">Not provided</span>`;
+
+  document.querySelector("#event-details-title").textContent = activity.title;
+  eventDetailsContent.innerHTML = `
+    <dl class="event-detail-list">
+      ${eventDetailRow("When", `<strong class="event-detail-time">${escapeHtml(availability)}</strong>`)}
+      ${eventDetailRow("Who should consider it", `<div class="event-detail-tags">${audience}</div>`)}
+      ${eventDetailRow("Added by", escapeHtml(activity.submittedBy || "Not provided"))}
+      ${eventDetailRow("Location", location)}
+      ${safeMapsUrl && activity.locationName ? eventDetailRow("Google Maps", `<a href="${safeMapsUrl}" target="_blank" rel="noopener noreferrer">Open location in Google Maps ↗</a>`) : ""}
+      ${eventDetailRow("External website", safeInfoUrl ? `<a href="${safeInfoUrl}" target="_blank" rel="noopener noreferrer">Open more information ↗</a>` : `<span class="event-detail-empty">Not provided</span>`)}
+      ${eventDetailRow("Notes", activity.notes ? `<p class="event-detail-notes">${escapeHtml(activity.notes)}</p>` : `<span class="event-detail-empty">No notes were entered</span>`)}
+      ${eventDetailRow("Family response", `${Number(activity.voteCount || 0)} ${Number(activity.voteCount || 0) === 1 ? "vote" : "votes"} · ${Number(activity.discussionCount || 0)} discussion ${Number(activity.discussionCount || 0) === 1 ? "message" : "messages"}`)}
+    </dl>`;
+  eventDetailsDialog.dataset.activityId = activity.id;
+  eventDetailsDialog.showModal();
 }
 
 function openLocationEditor(activityId) {
@@ -508,6 +567,8 @@ async function loadTrip() {
     renderDays();
     renderIdeas();
     renderTimeline();
+    const requestedEventId = Number(new URLSearchParams(window.location.search).get("event"));
+    if (Number.isSafeInteger(requestedEventId) && requestedEventId > 0) openEventDetails(requestedEventId);
   } catch (error) {
     dayGrid.innerHTML = `<div class="loading-card">We couldn’t load the calendar. Please refresh in a moment.</div>`;
     ideaList.innerHTML = "";
@@ -518,7 +579,11 @@ async function loadTrip() {
 
 dayGrid.addEventListener("click", (event) => {
   const button = event.target.closest("[data-claim-date]");
-  if (!button) return;
+  if (!button) {
+    const card = event.target.closest("[data-day-date]");
+    if (card) openDayTimeline(card.dataset.dayDate);
+    return;
+  }
   const selected = state.days.find((day) => day.date === button.dataset.claimDate);
   if (!selected) return;
   const display = dateParts(selected.date);
@@ -534,6 +599,13 @@ dayGrid.addEventListener("click", (event) => {
   document.querySelector("#claim-name").value = editing ? selected.claimedBy || "" : "";
   document.querySelector("#claim-submit").textContent = editing ? "Save changes" : "Claim this day";
   claimDialog.showModal();
+});
+
+dayGrid.addEventListener("keydown", (event) => {
+  const card = event.target.closest("[data-day-date]");
+  if (!card || event.target !== card || !["Enter", " "].includes(event.key)) return;
+  event.preventDefault();
+  openDayTimeline(card.dataset.dayDate);
 });
 
 document.querySelector("#claim-close").addEventListener("click", () => claimDialog.close());
@@ -647,6 +719,11 @@ document.querySelectorAll("[data-location-type]").forEach((select) => {
 });
 
 document.querySelector(".ideas-section").addEventListener("click", async (event) => {
+  const details = event.target.closest("[data-event-details-id]");
+  if (details) {
+    openEventDetails(Number(details.dataset.eventDetailsId));
+    return;
+  }
   const edit = event.target.closest("[data-edit-activity-id]");
   if (edit) {
     openIdeaEditor(Number(edit.dataset.editActivityId));
@@ -660,6 +737,12 @@ document.querySelector(".ideas-section").addEventListener("click", async (event)
   const discussion = event.target.closest("[data-discussion-id]");
   if (discussion) {
     openDiscussion(Number(discussion.dataset.discussionId));
+    return;
+  }
+  const eventCard = event.target.closest("[data-event-id]");
+  const clickedInteractive = event.target.closest("a, button, input, select, textarea, label, summary, details");
+  if (eventCard && !clickedInteractive) {
+    openEventDetails(Number(eventCard.dataset.eventId));
     return;
   }
   const button = event.target.closest("[data-vote-id]");
@@ -685,6 +768,13 @@ document.querySelector(".ideas-section").addEventListener("click", async (event)
     toast(error.message, true);
     document.querySelectorAll(`[data-vote-id="${id}"]`).forEach((item) => { item.disabled = false; });
   }
+});
+
+document.querySelector(".ideas-section").addEventListener("keydown", (event) => {
+  const card = event.target.closest("[data-event-id]");
+  if (!card || event.target !== card || !["Enter", " "].includes(event.key)) return;
+  event.preventDefault();
+  openEventDetails(Number(card.dataset.eventId));
 });
 
 discussionForm.addEventListener("submit", async (event) => {
@@ -753,18 +843,40 @@ locationForm.addEventListener("submit", async (event) => {
 
 document.querySelector("#location-close").addEventListener("click", () => locationDialog.close());
 
-document.querySelector(".view-switch").addEventListener("click", (event) => {
-  const button = event.target.closest("[data-view]");
-  if (!button) return;
-  state.view = button.dataset.view;
-  boardView.hidden = state.view !== "board";
-  timelineView.hidden = state.view !== "timeline";
+document.querySelector("#event-details-close").addEventListener("click", () => eventDetailsDialog.close());
+document.querySelector("#event-details-edit").addEventListener("click", () => {
+  const activityId = Number(eventDetailsDialog.dataset.activityId);
+  eventDetailsDialog.close();
+  openIdeaEditor(activityId);
+});
+document.querySelector("#event-details-discuss").addEventListener("click", () => {
+  const activityId = Number(eventDetailsDialog.dataset.activityId);
+  eventDetailsDialog.close();
+  openDiscussion(activityId);
+});
+
+function setActivityView(view) {
+  state.view = view;
+  boardView.hidden = view !== "board";
+  timelineView.hidden = view !== "timeline";
   document.querySelectorAll(".view-button").forEach((item) => {
-    const active = item === button;
+    const active = item.dataset.view === view;
     item.classList.toggle("active", active);
     item.setAttribute("aria-pressed", String(active));
   });
-  if (state.view === "timeline") renderTimeline();
+  if (view === "timeline") renderTimeline();
+}
+
+function openDayTimeline(date) {
+  state.timelineDate = date;
+  setActivityView("timeline");
+  document.querySelector("#ideas").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+document.querySelector(".view-switch").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-view]");
+  if (!button) return;
+  setActivityView(button.dataset.view);
 });
 
 document.querySelector(".timeline-conflict-controls").addEventListener("click", (event) => {
@@ -772,6 +884,18 @@ document.querySelector(".timeline-conflict-controls").addEventListener("click", 
   if (!button) return;
   state.timelineConflictFilter = button.dataset.timelineFilter;
   document.querySelectorAll("[data-timeline-filter]").forEach((item) => {
+    const active = item === button;
+    item.classList.toggle("active", active);
+    item.setAttribute("aria-pressed", String(active));
+  });
+  renderTimeline();
+});
+
+document.querySelector(".timeline-scope-controls").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-timeline-scope]");
+  if (!button) return;
+  state.timelineScope = button.dataset.timelineScope;
+  document.querySelectorAll("[data-timeline-scope]").forEach((item) => {
     const active = item === button;
     item.classList.toggle("active", active);
     item.setAttribute("aria-pressed", String(active));
